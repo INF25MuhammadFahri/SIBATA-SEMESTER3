@@ -3,6 +3,8 @@
 import dotenv from "dotenv";
 import express from "express";
 import path from "node:path";
+import * as data from "../common_data.js";
+import * as midle from "./middleware/middleware.js"
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +47,9 @@ app.get("/login", (req, res) => {
 });
 
 // Route API
+app.post("/api/login",midle.login);
+app.post("/api/logout",midle.logout);
+app.post("/api/extendSesion",midle.extendSesionEndpoint);
 app.get("/api/health", (req, res) => {
     res.json({
         status: "ok",

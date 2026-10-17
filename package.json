@@ -11,6 +11,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jose": "^6.2.12",
