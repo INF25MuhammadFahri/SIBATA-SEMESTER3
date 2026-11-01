@@ -1,5 +1,5 @@
-import * as db from "../db/db.js";
-import { createSuccsesReturn, createFailedReturn } from "../common_type.js";
+import * as db from "../../database/db.js";
+import { createSuccsesReturn, createFailedReturn } from "./common_type.js";
 
 /* ------------------------------------------------------------------ */
 /* Konfigurasi                                                         */
