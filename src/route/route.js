@@ -5,110 +5,54 @@ export * as wilayah from "./internal/wilayah.js";
 export * as infrastruktur from "./internal/infrastruktur.js";
 export * as kandidat_lokasi from "./internal/kandidat_lokasi.js";
 export * as status_lahan from "./internal/status_lahan.js";
-//import db later
-function isArrayOfObject(data) {
-    return Array.isArray(data) &&
-        data.every(item =>
-            item !== null &&
-            typeof item === "object" &&
-            !Array.isArray(item)
-        );
-}
+export * as pemilik from "./internal/pemilik.js";
+export * as kabupaten_kota from "./internal/kabupaten_kota.js";
+
 /**
- * @param {unknown} data
- * @returns {data is string[]}
+ * Endpoint gabungan (joined data) untuk kebutuhan visualisasi dashboard frontend
  */
-function isArrayOfString(data) {
-  return Array.isArray(data) &&
-    data.every(item => typeof item === "string");
-}
-/**
-* @param {express.Request} req 
-* @param {express.Response} res
-*/
-export async function get(req,res){
-  const pageInd=req.query.page;
-  const pageSize=req.query.size;
-  const searchKey=req.query.search;
-  const result=[{
-    id:"12",
-    some:"arum"
-  }]//unimplemented
-  if(result.length>0){
+export async function getJoined(req, res) {
+  try {
+    const data = await api.joinAll();
     res.status(200).json({
-      status:"ok",
-      data:result
-    })
-  }else{
-    res.status(404).json({
-      status:"not found",
-      data:[]
-    })
-  }
-  
-}
-/**
-* @param {express.Request} req 
-* @param {express.Response} res
-* menaruh data baru
-*/
-export async function post(req,res){
-  const data=req.body;
-  if(!isArrayOfObject(data)){
-    res.status(400).json({
-      status:"bad format"
+      status: "ok",
+      is_err: false,
+      data
     });
-    return;
-  }
-  const pconflictIDs=[];//unimplemented
-  if(pconflictIDs.length==0){
-    res.status(200).json({
-      status:"ok"
-    })
-  }else{
-    res.status(409).json({
-      status:"conflict",
-      conflictIDs:pconflictIDs
-    })
+  } catch (err) {
+    res.status(500).json({
+      status: err.message || "Gagal mengambil data gabungan",
+      is_err: true,
+      data: []
+    });
   }
 }
-export async function put(req,res){
-  const data=req.body;
-  if(!isArrayOfString(data)){
-    res.status(400).json({
-      status:"bad format"
-    });
-    return;
-  }
-  const pMissingIDs=[];//unimplemented
-  if(pMissingIDs.length==0){
-    res.status(200).json({
-      status:"ok"
-    })
-  }else{
-    res.status(404).json({
-      status:"not found",
-      missingIDs:pMissingIDs
-    })
-  }
+
+// Test endpoints
+export async function get(req, res) {
+  res.status(200).json({
+    status: "ok",
+    data: [{ id: "12", test: "success" }]
+  });
 }
-export async function del(req,res){
-  const data=req.body;
-  if(!isArrayOfObject(data)){
-    res.status(400).json({
-      status:"bad format"
-    });
-    return;
-  }
-  const pMissingIDs=[];//unimplemented
-  if(pMissingIDs.length==0){
-    res.status(200).json({
-      status:"ok"
-    })
-  }else{
-    res.status(404).json({
-      status:"not found",
-      missingIDs:pMissingIDs
-    })
-  }
+
+export async function post(req, res) {
+  res.status(200).json({
+    status: "ok",
+    data: []
+  });
+}
+
+export async function put(req, res) {
+  res.status(200).json({
+    status: "ok",
+    data: []
+  });
+}
+
+export async function del(req, res) {
+  res.status(200).json({
+    status: "ok",
+    data: []
+  });
 }

@@ -1,0 +1,58 @@
+[
+  {
+    "id": null,
+    "nomor_persil": "PRS-9101",
+    "luas_hektar": 12.5,
+    "pemilik_id": "PMK-001",
+    "wilayah_id": "WIL-01",
+    "status_lahan_id": "ST-02",
+    "jenis_sawah": "Tadah Hujan",
+    "latitude": -6.3458,
+    "longitude": 107.3124
+  },
+  {
+    "id": null,
+    "nomor_persil": "PRS-9102",
+    "luas_hektar": 8.75,
+    "pemilik_id": "PMK-002",
+    "wilayah_id": "WIL-02",
+    "status_lahan_id": "ST-01",
+    "jenis_sawah": "Irigasi Teknis",
+    "latitude": -6.3821,
+    "longitude": 107.3912
+  },
+  {
+    "id": null,
+    "nomor_persil": "PRS-9103",
+    "luas_hektar": 15.2,
+    "pemilik_id": "PMK-003",
+    "wilayah_id": "WIL-03",
+    "status_lahan_id": "ST-03",
+    "jenis_sawah": "Setengah Teknis",
+    "latitude": -6.4912,
+    "longitude": 107.6189
+  },
+  {
+    "id": null,
+    "nomor_persil": "PRS-9104",
+    "luas_hektar": 6.4,
+    "pemilik_id": "PMK-004",
+    "wilayah_id": "WIL-04",
+    "status_lahan_id": "ST-02",
+    "jenis_sawah": "Tadah Hujan",
+    "latitude": -6.531,
+    "longitude": 107.689
+  },
+  {
+    "id": null,
+    "nomor_persil": "PRS-9105",
+    "luas_hektar": 11.0,
+    "pemilik_id": "PMK-005",
+    "wilayah_id": "WIL-05",
+    "status_lahan_id": "ST-02",
+    "jenis_sawah": "Setengah Teknis",
+    "latitude": -6.3689,
+    "longitude": 107.1654
+  }
+]
+

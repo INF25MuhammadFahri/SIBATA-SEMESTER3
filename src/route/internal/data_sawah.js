@@ -2,18 +2,8 @@ import * as express from "express";
 import * as api from "../../api/api.js";
 import * as commondata from "../../common_data.js";
 import * as middleware from "../../middleware/middleware.js";
-function isArrayOfObject(data) {
-  return (
-    Array.isArray(data) &&
-    data.every(
-      (item) => item !== null && typeof item === "object" && !Array.isArray(item)
-    )
-  );
-}
 
-function isArrayOfString(data) {
-  return Array.isArray(data) && data.every((item) => typeof item === "string");
-}
+const router = express.Router();
 
 function checkDatabase(res) {
   if (commondata.dbstatus == null) {
@@ -38,47 +28,87 @@ function checkDatabase(res) {
 }
 
 /**
-* @param {express.Request} req 
-* @param {express.Response} res
-*/
-async function get(req, res) {
-  const pageInd = req.query.page;
-  const pageSize = req.query.size;
-  const searchKey = req.query.search;
-  let result = [];
-  
-  if (!checkDatabase(res)) return;
+ * Mendukung objek tunggal maupun array of objects untuk entri batch banyak data sekaligus
+ */
+function isDataObject(data) {
+  if (Array.isArray(data)) {
+    return data.length > 0 && data.every(item => item !== null && typeof item === "object" && !Array.isArray(item));
+  }
+  return data !== null && typeof data === "object";
+}
 
-  if (api.dataSawah && typeof api.dataSawah.getDataSawah === "function") {
-    const resDb = await api.dataSawah.getDataSawah({ ind: pageInd, offset: pageSize });
-    if (resDb && Array.isArray(resDb.data)) {
-      result = resDb.data;
-    }
-  }
-  
-  if (result.length > 0) {
-    res.status(200).json({
-      status: "ok",
-      is_err: false,
-      data: result
-    });
-  } else {
-    res.status(404).json({
-      status: "not found",
-      is_err: false,
-      data: []
-    });
-  }
+function isArrayOfString(data) {
+  return Array.isArray(data) && data.every(item => typeof item === "string");
 }
 
 /**
-* @param {express.Request} req 
-* @param {express.Response} res
-* menaruh data baru
-*/
+ * GET /api/data_sawah
+ */
+async function get(req, res) {
+  if (!checkDatabase(res)) return;
+
+  const rawPage = req.query.page;
+  const rawSize = req.query.size;
+  const rawSearch = req.query.search;
+
+  const pageInd = rawPage === undefined ? 0 : Number(rawPage);
+  const pageSize = rawSize === undefined ? null : Number(rawSize);
+
+  if (
+    !Number.isSafeInteger(pageInd) ||
+    pageInd < 0 ||
+    (pageSize !== null && (!Number.isSafeInteger(pageSize) || pageSize < 0))
+  ) {
+    res.status(400).json({
+      status: "bad pagination",
+      is_err: true,
+      data: []
+    });
+    return;
+  }
+
+  const result = await api.dataSawah.getSawah(pageInd, pageSize, rawSearch);
+
+  if (result.is_err) {
+    res.status(500).json({
+      status: result.Status || "internal server error",
+      is_err: true,
+      data: []
+    });
+    return;
+  }
+
+  if (!Array.isArray(result.data)) {
+    res.status(500).json({
+      status: "invalid API response",
+      is_err: true,
+      data: []
+    });
+    return;
+  }
+
+  if (result.data.length === 0) {
+    res.status(404).json({
+      status: "not found",
+      is_err: false,
+      data: []
+    });
+    return;
+  }
+
+  res.status(200).json({
+    status: "ok",
+    is_err: false,
+    data: result.data
+  });
+}
+
+/**
+ * POST /api/data_sawah
+ * Mendukung objek tunggal maupun array of objects untuk penambahan banyak data sekaligus
+ */
 async function post(req, res) {
-  const data = req.body;
-  if (!isArrayOfObject(data)) {
+  if (!isDataObject(req.body)) {
     res.status(400).json({
       status: "bad format",
       is_err: true,
@@ -86,35 +116,42 @@ async function post(req, res) {
     });
     return;
   }
-  
+
   if (!checkDatabase(res)) return;
 
-  let pconflictIDs = [];
-  if (api.dataSawah && typeof api.dataSawah.addDataSawah === "function") {
-    const resDb = await api.dataSawah.addDataSawah(data);
-    if (resDb && Array.isArray(resDb.data)) {
-      pconflictIDs = resDb.data;
-    }
-  }
+  const result = await api.dataSawah.postSawah(req.body);
 
-  if (pconflictIDs.length === 0) {
-    res.status(200).json({
-      status: "ok",
-      is_err: false,
+  if (result.is_err) {
+    res.status(500).json({
+      status: result.Status || "internal server error",
+      is_err: true,
       data: []
     });
-  } else {
+    return;
+  }
+
+  if (result.data.length > 0) {
     res.status(409).json({
       status: "conflict",
       is_err: false,
-      conflictIDs: pconflictIDs
+      data: result.data
     });
+    return;
   }
+
+  res.status(201).json({
+    status: "ok",
+    is_err: false,
+    data: []
+  });
 }
 
+/**
+ * PUT /api/data_sawah
+ * Mendukung objek tunggal maupun array of objects untuk pembaruan banyak data sekaligus
+ */
 async function put(req, res) {
-  const data = req.body;
-  if (!isArrayOfString(data)) {
+  if (!isDataObject(req.body)) {
     res.status(400).json({
       status: "bad format",
       is_err: true,
@@ -125,32 +162,39 @@ async function put(req, res) {
 
   if (!checkDatabase(res)) return;
 
-  let pMissingIDs = [];
-  if (api.dataSawah && typeof api.dataSawah.updateDataSawah === "function") {
-    const resDb = await api.dataSawah.updateDataSawah(data);
-    if (resDb && Array.isArray(resDb.data)) {
-      pMissingIDs = resDb.data;
-    }
-  }
+  const result = await api.dataSawah.putSawah(req.body);
 
-  if (pMissingIDs.length === 0) {
-    res.status(200).json({
-      status: "ok",
-      is_err: false,
+  if (result.is_err) {
+    res.status(500).json({
+      status: result.Status || "internal server error",
+      is_err: true,
       data: []
     });
-  } else {
+    return;
+  }
+
+  if (result.data.length > 0) {
     res.status(404).json({
       status: "not found",
       is_err: false,
-      missingIDs: pMissingIDs
+      data: result.data
     });
+    return;
   }
+
+  res.status(200).json({
+    status: "ok",
+    is_err: false,
+    data: []
+  });
 }
 
+/**
+ * DELETE /api/data_sawah
+ * Mendukung array of string ID untuk penghapusan banyak data sekaligus
+ */
 async function del(req, res) {
-  const data = req.body;
-  if (!isArrayOfObject(data)) {
+  if (!isArrayOfString(req.body)) {
     res.status(400).json({
       status: "bad format",
       is_err: true,
@@ -161,32 +205,36 @@ async function del(req, res) {
 
   if (!checkDatabase(res)) return;
 
-  let pMissingIDs = [];
-  if (api.dataSawah && typeof api.dataSawah.deleteDataSawah === "function") {
-    const resDb = await api.dataSawah.deleteDataSawah(data);
-    if (resDb && Array.isArray(resDb.data)) {
-      pMissingIDs = resDb.data;
-    }
-  }
+  const result = await api.dataSawah.delSawah(req.body);
 
-  if (pMissingIDs.length === 0) {
-    res.status(200).json({
-      status: "ok",
-      is_err: false,
+  if (result.is_err) {
+    res.status(500).json({
+      status: result.Status || "internal server error",
+      is_err: true,
       data: []
     });
-  } else {
+    return;
+  }
+
+  if (result.data.length > 0) {
     res.status(404).json({
       status: "not found",
       is_err: false,
-      missingIDs: pMissingIDs
+      data: result.data
     });
+    return;
   }
+
+  res.status(200).json({
+    status: "ok",
+    is_err: false,
+    data: []
+  });
 }
 
-const router = express.Router();
 router.get("/", get);
-router.post("/",middleware.extendSesion, post);
-router.put("/",middleware.extendSesion, put);
-router.delete("/",middleware.extendSesion, del);
+router.post("/", middleware.extendSesion, post);
+router.put("/", middleware.extendSesion, put);
+router.delete("/", middleware.extendSesion, del);
+
 export { router };

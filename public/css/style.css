@@ -1482,3 +1482,684 @@ footer.site-footer {
     align-items: flex-start;
   }
 }
+
+/* ==========================================================================
+   FITUR CRUD BANYAK DATA (ARRAY BATCH) & PENGELOLAAN DI ADMIN PANEL
+   ========================================================================== */
+
+.admin-mode-selector {
+  display: inline-flex;
+  gap: 8px;
+  background-color: #f1f4f1;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 28px;
+  border: 1px solid var(--border-color);
+  max-width: 100%;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.admin-mode-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.admin-mode-tab .tab-icon {
+  stroke-width: 2.2;
+}
+
+.admin-mode-tab:hover {
+  color: var(--primary-green);
+  background-color: rgba(30, 77, 54, 0.05);
+}
+
+.admin-mode-tab.active {
+  background-color: var(--primary-green);
+  color: var(--text-white) !important;
+  box-shadow: 0 4px 12px rgba(30, 77, 54, 0.28);
+}
+
+.batch-mode-container {
+  display: none;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.batch-mode-container.active {
+  display: block;
+}
+
+/* Tabel Entri Banyak Baris (Batch Array Input) */
+.batch-table-scroll-wrapper {
+  overflow-x: auto;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  margin-bottom: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.batch-input-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+.batch-input-table th {
+  background-color: #f8faf8;
+  color: var(--text-dark);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 13px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.batch-input-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.batch-input-table tbody tr:hover {
+  background-color: #fcfdfc;
+}
+
+.batch-input-table input,
+.batch-input-table select {
+  width: 100%;
+  padding: 8px 11px;
+  font-size: 0.8125rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: all var(--transition-fast);
+  color: var(--text-dark);
+}
+
+.batch-input-table input:focus,
+.batch-input-table select:focus {
+  background-color: #ffffff;
+  border-color: var(--primary-green);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 77, 54, 0.12);
+}
+
+.btn-remove-row {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all var(--transition-fast);
+  margin: 0 auto;
+}
+
+.btn-remove-row:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.batch-control-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+.batch-left-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-pill-small {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.btn-pill-outline {
+  background-color: #ffffff;
+  border-color: var(--border-strong);
+  color: var(--text-dark);
+}
+
+.btn-pill-outline:hover {
+  background-color: #f3f4f6;
+  border-color: var(--text-muted);
+}
+
+.btn-pill-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-pill-danger:hover {
+  background-color: #fca5a5;
+  color: #991b1b;
+}
+
+/* JSON Batch Array Editor */
+.json-batch-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #334155;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+}
+
+.json-editor-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0f172a;
+  padding: 10px 16px;
+  border-bottom: 1px solid #334155;
+}
+
+.json-window-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.json-window-dots .dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-red { background-color: #ef4444; }
+.dot-yellow { background-color: #f59e0b; }
+.dot-green { background-color: #10b981; }
+
+.json-editor-title {
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.json-indicator {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.json-textarea {
+  width: 100%;
+  min-height: 280px;
+  background-color: #1e293b;
+  color: #a7f3d0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  padding: 16px;
+  border: none;
+  resize: vertical;
+}
+
+.json-textarea:focus {
+  outline: none;
+  background-color: #1a2436;
+}
+
+/* CRUD Data Sawah Manager (Tabel Admin Lengkap) */
+.admin-data-manager-section {
+  margin-top: 52px;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+  border: 1.5px solid var(--border-color);
+}
+
+.manager-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.manager-title-group h2 {
+  font-size: 1.375rem;
+  color: var(--primary-green);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manager-title-group p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.manager-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  position: relative;
+  min-width: 270px;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px 0 38px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 0.875rem;
+  background-color: #fafbfc;
+  transition: all var(--transition-fast);
+}
+
+.search-input-wrapper input:focus {
+  background-color: #ffffff;
+  border-color: var(--primary-green);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 77, 54, 0.12);
+}
+
+.search-icon-svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  pointer-events: none;
+}
+
+.btn-action-tool {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all var(--transition-fast);
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-strong);
+  color: var(--text-dark);
+}
+
+.btn-action-tool:hover {
+  background-color: #f3f4f6;
+  border-color: var(--text-muted);
+}
+
+.btn-action-export {
+  border-color: rgba(30, 77, 54, 0.4);
+  color: var(--primary-green);
+  background-color: #f9fbf9;
+}
+
+.btn-action-export:hover {
+  background-color: var(--secondary-green-light);
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+}
+
+/* Batch Toolbar (Tindakan Terpilih) */
+.batch-delete-banner {
+  background: linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+  border: 1.5px solid #fed7aa;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08);
+  animation: fadeIn 0.2s ease-in;
+}
+
+.batch-delete-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #9a3412;
+  font-size: 0.9375rem;
+}
+
+.batch-badge-counter {
+  background-color: #ea580c;
+  color: #ffffff;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.batch-banner-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-batch-action {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.btn-batch-action-export {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.btn-batch-action-export:hover {
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.btn-batch-action-cancel {
+  background-color: #ffffff;
+  color: var(--text-dark);
+  border-color: var(--border-strong);
+}
+
+.btn-batch-action-cancel:hover {
+  background-color: #f3f4f6;
+}
+
+.btn-batch-action-delete {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.btn-batch-action-delete:hover {
+  background-color: #b91c1c;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+}
+
+/* Checkbox Styling */
+.table-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-green);
+  border-radius: 4px;
+}
+
+/* Highlight Row Terpilih */
+.data-table tbody tr.row-selected {
+  background-color: #f0fdf4 !important;
+}
+
+.data-table tbody tr.row-selected td {
+  border-bottom-color: #bbf7d0;
+}
+
+/* Badge ID Monospace */
+.badge-id-mono {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--primary-green);
+  background-color: var(--secondary-green-light);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(30, 77, 54, 0.2);
+}
+
+/* Tombol Aksi Baris */
+.row-actions-group {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-row-edit {
+  background-color: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+
+.btn-row-edit:hover {
+  background-color: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.btn-row-del {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+
+.btn-row-del:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+/* Export Modal Cards & Radio Selectors */
+.export-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.export-cards-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.export-select-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: var(--bg-light);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.export-select-card:hover {
+  background-color: #ffffff;
+  border-color: var(--secondary-green);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.export-select-card input[type="radio"] {
+  margin-top: 3px;
+  accent-color: var(--primary-green);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.export-select-card:has(input[type="radio"]:checked) {
+  background-color: #f0fdf4;
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 1px var(--primary-green);
+}
+
+.export-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.export-card-title {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-dark);
+}
+
+.export-card-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.export-card-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Tombol Aksi Modal Ekspor (Selaras dengan Radius Kartu var(--radius-sm)) */
+.export-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-export-action {
+  border-radius: var(--radius-sm) !important;
+  padding: 10px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all var(--transition-fast);
+  border: 1.5px solid transparent;
+  line-height: 1.2;
+}
+
+.btn-export-action.btn-outline {
+  background-color: #ffffff;
+  border-color: var(--border-strong);
+  color: var(--text-dark);
+}
+
+.btn-export-action.btn-outline:hover {
+  background-color: #f3f4f6;
+  border-color: var(--text-muted);
+}
+
+.btn-export-action.btn-primary {
+  background-color: var(--primary-green);
+  border-color: var(--primary-green);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(30, 77, 54, 0.2);
+}
+
+.btn-export-action.btn-primary:hover {
+  background-color: var(--primary-green-hover);
+  border-color: var(--primary-green-hover);
+  box-shadow: 0 4px 12px rgba(30, 77, 54, 0.3);
+}
+
+/* Container Utama Halaman Admin & Responsivitas */
+.admin-main-container {
+  padding: 40px 80px 80px 80px;
+}
+
+@media (max-width: 1024px) {
+  .admin-main-container {
+    padding: 30px 32px 60px 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-main-container {
+    padding: 24px 16px 40px 16px;
+  }
+
+  .export-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-header-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manager-actions-row {
+    width: 100%;
+  }
+
+  .search-input-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .batch-delete-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
