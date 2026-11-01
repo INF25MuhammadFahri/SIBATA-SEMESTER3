@@ -1,149 +1,152 @@
 import * as db from "../../database/db.js";
+import { createSuccsesReturn, createFailedReturn } from "./common_type.js";
 
-/**
- * 1. Mengambil data status lahan (Get / Read)
- * @param {number|null|undefined} page - Indeks halaman (default 0)
- * @param {number|null|undefined} size - Ukuran data per halaman (null/undefined = seluruh data)
- * @param {string|null|undefined} search - Kata kunci pencarian
- * @returns {Promise<Object[]>} Array of object data status lahan
- */
-export async function getStatusLahan(page, size, search) {
-    // Perilaku: Jika page undefined atau null, set ke 0
-    const pageIndex = (page === undefined || page === null) ? 0 : Number(page);
+const TABLE = "status_lahan";
+const SEARCH_COLUMNS = ["id", "kategori"];
 
-    let limit;
-    let offset;
-
-    // Perilaku: Jika size undefined atau null, ambil seluruh data
-    if (size !== undefined && size !== null) {
-        limit = Number(size);
-        offset = pageIndex * limit;
-    }
-
-    // Konfigurasi pencarian jika parameter search diberikan
-    const searchOptions = (search !== undefined && search !== null && search !== "")
-        ? { columns: ["id_status"], keyword: String(search) }
-        : undefined;
-
-    return await db.select({
-        from: "status_lahan",
-        search: searchOptions,
-        limit,
-        offset
-    });
+function hasId(id) {
+    return id !== undefined && id !== null && String(id).trim() !== "";
 }
 
-/**
- * 2. Menambah data status lahan baru (Create / Post)
- * @param {Object|Object[]} data - Object/array data status lahan { id: string|null|undefined, ... }
- * @returns {Promise<string[]>} Array dari ID yang mengalami konflik
- */
+function toNonNegativeInt(value, label) {
+    const n = Number(value);
+    if (!Number.isSafeInteger(n) || n < 0) {
+        throw new Error(`${label} must be a non-negative integer`);
+    }
+    return n;
+}
+
+async function idExists(id) {
+    return (await db.countRows(TABLE, { id })) > 0;
+}
+
+async function generateNextId() {
+    const rows = await db.select({
+        from: TABLE,
+        columns: ["id"]
+    });
+    let max = 0;
+    for (const row of rows) {
+        const idStr = String(row.id || "");
+        if (idStr.startsWith("ST-")) {
+            const num = parseInt(idStr.replace("ST-", ""), 10);
+            if (!Number.isNaN(num) && num > max) {
+                max = num;
+            }
+        }
+    }
+    return `ST-${String(max + 1).padStart(2, "0")}`;
+}
+
+export async function getStatusLahan(page, size, search) {
+    try {
+        const pageIndex = page === undefined || page === null ? 0 : toNonNegativeInt(page, "page");
+        const hasSize = size !== undefined && size !== null;
+        const pageSize = hasSize ? toNonNegativeInt(size, "size") : undefined;
+
+        const keyword = search === undefined || search === null ? "" : String(search).trim();
+
+        const rows = await db.select({
+            from: TABLE,
+            search: keyword !== "" ? { columns: SEARCH_COLUMNS, keyword } : undefined,
+            orderBy: [{ column: "id" }],
+            limit: pageSize,
+            offset: hasSize ? pageIndex * pageSize : undefined
+        });
+
+        return createSuccsesReturn(rows.map(r => ({ ...r, id: String(r.id) })));
+    } catch (err) {
+        return createFailedReturn(err.message);
+    }
+}
+
 export async function postStatusLahan(data) {
-    const items = Array.isArray(data) ? data : [data];
-    const conflicts = [];
+    try {
+        const conflicts = [];
+        const items = [].concat(data ?? []);
 
-    for (const item of items) {
-        const { id, ...payload } = item;
+        for (const item of items) {
+            if (!item || typeof item !== "object") continue;
 
-        // Cek jika ID diberikan dan tidak null/undefined
-        if (id !== undefined && id !== null && id !== "") {
-            const idStr = String(id);
-            const existing = await db.select({
-                from: "status_lahan",
-                where: { id: idStr },
-                limit: 1
-            });
+            const { id, ...payload } = item;
 
-            // Jika ID sudah ada di database -> Conflict
-            if (existing.length > 0) {
-                conflicts.push(idStr);
+            if (hasId(id)) {
+                const idStr = String(id).trim();
+                if (await idExists(idStr)) {
+                    conflicts.push(idStr);
+                    continue;
+                }
+                await db.insert(TABLE, { id: idStr, ...payload });
+            } else {
+                const nextId = await generateNextId();
+                await db.insert(TABLE, { id: nextId, ...payload });
+            }
+        }
+
+        return createSuccsesReturn(conflicts);
+    } catch (err) {
+        return createFailedReturn(err.message);
+    }
+}
+
+export async function putStatusLahan(data) {
+    try {
+        const missingIds = [];
+        const items = [].concat(data ?? []);
+
+        for (const item of items) {
+            if (!item || typeof item !== "object" || !hasId(item.id)) continue;
+
+            const { id, ...payload } = item;
+            const idStr = String(id).trim();
+
+            if (!(await idExists(idStr))) {
+                missingIds.push(idStr);
                 continue;
             }
 
-            // Simpan dengan ID yang disediakan
-            await db.insert("status_lahan", { id: idStr, ...payload });
-        } else {
-            // Perilaku: Jika ID tidak ada atau null -> dibuat data baru dengan ID otomatis dari DB
-            await db.insert("status_lahan", payload);
-        }
-    }
+            const set = Object.fromEntries(
+                Object.entries(payload).filter(([, v]) => v !== undefined)
+            );
+            if (Object.keys(set).length === 0) continue;
 
-    return conflicts;
-}
-
-/**
- * 3. Memperbarui data status lahan (Update / Put)
- * @param {Object|Object[]} data - Object/array data status lahan { id: string|null|undefined, ... }
- * @returns {Promise<string[]>} Array dari ID yang tidak ditemukan di DB
- */
-export async function putStatusLahan(data) {
-    const items = Array.isArray(data) ? data : [data];
-    const missingIds = [];
-
-    for (const item of items) {
-        const { id, ...payload } = item;
-
-        // Perilaku: Jika ID tidak ada, null, atau undefined -> data tidak digunakan / diabaikan
-        if (id === undefined || id === null || id === "") {
-            continue;
-        }
-
-        const idStr = String(id);
-        const existing = await db.select({
-            from: "status_lahan",
-            where: { id: idStr },
-            limit: 1
-        });
-
-        if (existing.length === 0) {
-            missingIds.push(idStr);
-        } else if (Object.keys(payload).length > 0) {
             await db.updateRows({
-                table: "status_lahan",
-                set: payload,
+                table: TABLE,
+                set,
                 where: { id: idStr }
             });
         }
-    }
 
-    return missingIds;
+        return createSuccsesReturn(missingIds);
+    } catch (err) {
+        return createFailedReturn(err.message);
+    }
 }
 
-/**
- * 4. Menghapus data status lahan (Delete / Del)
- * @param {string[]} ids - Array ID yang akan dihapus
- * @returns {Promise<string[]>} Array ID yang tidak ditemukan (missing_id)
- */
 export async function delStatusLahan(ids) {
-    if (!Array.isArray(ids) || ids.length === 0) {
-        return [];
-    }
+    try {
+        const wanted = [...new Set([].concat(ids ?? []).filter(hasId).map(String))];
+        if (wanted.length === 0) return createSuccsesReturn([]);
 
-    const missingIds = [];
-    const existingIds = [];
-
-    for (const rawId of ids) {
-        const idStr = String(rawId);
-        const existing = await db.select({
-            from: "status_lahan",
-            where: { id: idStr },
-            limit: 1
+        const rows = await db.select({
+            from: TABLE,
+            columns: ["id"],
+            where: { id: wanted }
         });
 
-        if (existing.length === 0) {
-            missingIds.push(idStr);
-        } else {
-            existingIds.push(idStr);
+        const found = new Set(rows.map(r => String(r.id)));
+        const missingIds = wanted.filter(id => !found.has(id));
+        const toDelete = wanted.filter(id => found.has(id));
+
+        if (toDelete.length > 0) {
+            await db.deleteRows({
+                from: TABLE,
+                where: { id: toDelete }
+            });
         }
-    }
 
-    // Hapus seluruh data ID yang ditemukan
-    if (existingIds.length > 0) {
-        await db.deleteRows({
-            from: "status_lahan",
-            where: { id: existingIds }
-        });
+        return createSuccsesReturn(missingIds);
+    } catch (err) {
+        return createFailedReturn(err.message);
     }
-
-    return missingIds;
 }

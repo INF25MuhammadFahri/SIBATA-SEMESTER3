@@ -1,10 +1,15 @@
-// Modul Manajemen Otentikasi SIBATA
+// Modul Manajemen Otentikasi & Sesi SIBATA
+// Sesuai dengan spesifikasi: doc/client to server login and Sesion.md
 
 const AUTH_STORAGE_KEY = "sibata_auth_state";
 const SESSION_ID_KEY = "sibata_session_id";
+const USERNAME_KEY = "sibata_auth_username";
+const DISPLAY_NAME_KEY = "sibata_auth_name";
+
+let sessionHeartbeatTimer = null;
 
 export function isLoggedIn() {
-  return localStorage.getItem(AUTH_STORAGE_KEY) === "true";
+  return localStorage.getItem(AUTH_STORAGE_KEY) === "true" && Boolean(getSessionId());
 }
 
 export function getSessionId() {
@@ -24,19 +29,31 @@ export function getAuthHeaders() {
 
 export function getAuthUser() {
   if (!isLoggedIn()) return null;
+  const username = localStorage.getItem(USERNAME_KEY) || "admin";
   return {
-    username: localStorage.getItem("sibata_auth_username") || "admin",
-    name: localStorage.getItem("sibata_auth_name") || "Administrator SIBATA",
+    username,
+    name: localStorage.getItem(DISPLAY_NAME_KEY) || (username === "joko" ? "Joko (Staff Ahli Tata Ruang)" : "Administrator SIBATA"),
     role: "Admin Tata Ruang",
     sessionId: getSessionId()
   };
 }
 
+/**
+ * Login ke server melalui POST /api/login
+ * @param {string} username
+ * @param {string} password
+ */
 export async function login(username, password) {
   const cleanUsername = username.trim();
   const cleanPassword = password.trim();
 
-  // 1. Coba otentikasi ke server melalui fetch HTTP POST /api/login
+  if (!cleanUsername || !cleanPassword) {
+    return {
+      success: false,
+      message: "Nama pengguna dan kata sandi wajib diisi."
+    };
+  }
+
   try {
     const response = await fetch("/api/login", {
       method: "POST",
@@ -49,78 +66,57 @@ export async function login(username, password) {
       })
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      const sessionId = data.seesionId || data.sessionId;
+    const result = await response.json();
+
+    if (response.ok && result.status === "ok") {
+      const sessionId = result.seesionId || result.sessionId;
 
       localStorage.setItem(AUTH_STORAGE_KEY, "true");
-      localStorage.setItem("sibata_auth_username", cleanUsername);
+      localStorage.setItem(USERNAME_KEY, cleanUsername);
       localStorage.setItem(
-        "sibata_auth_name",
-        cleanUsername === "joko" ? "Joko (Staff Ahli Tata Ruang)" : cleanUsername
+        DISPLAY_NAME_KEY,
+        cleanUsername === "joko" ? "Joko (Staff Ahli Tata Ruang)" : "Administrator SIBATA"
       );
       if (sessionId) {
         localStorage.setItem(SESSION_ID_KEY, sessionId);
       }
 
+      startSessionKeepAlive();
+
       return {
         success: true,
-        mode: "server",
-        sessionId: sessionId,
+        sessionId,
         message: "Login server berhasil."
       };
     }
 
     if (response.status === 401) {
-      // Periksa fallback lokal jika server menolak kredensial
-      if (
-        cleanUsername.toLowerCase() === "admin" &&
-        (cleanPassword === "admin" || cleanPassword === "admin123")
-      ) {
-        localStorage.setItem(AUTH_STORAGE_KEY, "true");
-        localStorage.setItem("sibata_auth_username", "admin");
-        localStorage.setItem("sibata_auth_name", "Administrator SIBATA");
-        localStorage.removeItem(SESSION_ID_KEY);
-        return {
-          success: true,
-          mode: "local",
-          message: "Login offline/lokal berhasil."
-        };
-      }
-
       return {
         success: false,
-        message: "Username atau kata sandi tidak cocok di server."
+        message: "Kata sandi atau nama pengguna salah."
       };
     }
-  } catch (err) {
-    console.warn("Gagal terhubung ke endpoint /api/login, beralih ke fallback offline:", err);
-  }
 
-  // 2. Fallback offline: admin / admin atau admin / admin123
-  if (
-    cleanUsername.toLowerCase() === "admin" &&
-    (cleanPassword === "admin" || cleanPassword === "admin123")
-  ) {
-    localStorage.setItem(AUTH_STORAGE_KEY, "true");
-    localStorage.setItem("sibata_auth_username", "admin");
-    localStorage.setItem("sibata_auth_name", "Administrator SIBATA");
-    localStorage.removeItem(SESSION_ID_KEY);
     return {
-      success: true,
-      mode: "local",
-      message: "Login mode offline berhasil."
+      success: false,
+      message: result.status || "Terjadi kesalahan saat otentikasi."
+    };
+  } catch (err) {
+    console.error("Gagal terhubung ke endpoint /api/login:", err);
+    return {
+      success: false,
+      message: "Gagal menghubungi server database. Pastikan server aktif."
     };
   }
-
-  return {
-    success: false,
-    message: "Username atau kata sandi tidak valid. Coba akun 'joko' / 'uong' (server) atau 'admin' / 'admin' (lokal)."
-  };
 }
 
+/**
+ * Logout dari sistem melalui POST /api/logout
+ */
 export async function logout() {
+  stopSessionKeepAlive();
   const sessionId = getSessionId();
+
   if (sessionId) {
     try {
       await fetch("/api/logout", {
@@ -139,11 +135,15 @@ export async function logout() {
 
   localStorage.removeItem(AUTH_STORAGE_KEY);
   localStorage.removeItem(SESSION_ID_KEY);
-  localStorage.removeItem("sibata_auth_username");
-  localStorage.removeItem("sibata_auth_name");
+  localStorage.removeItem(USERNAME_KEY);
+  localStorage.removeItem(DISPLAY_NAME_KEY);
+
   window.location.href = "index.html";
 }
 
+/**
+ * Memperpanjang masa aktif sesi melalui POST /api/extendSesion
+ */
 export async function extendSession() {
   const sessionId = getSessionId();
   if (!sessionId) return false;
@@ -158,36 +158,77 @@ export async function extendSession() {
         sesionId: sessionId
       })
     });
-    return res.ok;
+
+    if (res.ok) {
+      return true;
+    }
+
+    if (res.status === 401) {
+      console.warn("Sesi di server telah berakhir atau tidak valid.");
+      handleExpiredSession();
+      return false;
+    }
+
+    return false;
   } catch (err) {
     console.warn("Gagal memperpanjang sesi:", err);
     return false;
   }
 }
 
-// Inisialisasi tampilan Navbar dan menu mobile
+function handleExpiredSession() {
+  stopSessionKeepAlive();
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem(SESSION_ID_KEY);
+  localStorage.removeItem(USERNAME_KEY);
+  localStorage.removeItem(DISPLAY_NAME_KEY);
+
+  if (window.location.pathname.includes("admin")) {
+    alert("Sesi login Anda telah berakhir. Silakan masuk kembali.");
+    window.location.replace("login.html?redirect=admin.html");
+  }
+}
+
+/**
+ * Keep-alive timer untuk memperpanjang sesi secara otomatis selama browser aktif
+ */
+export function startSessionKeepAlive() {
+  stopSessionKeepAlive();
+  if (!isLoggedIn()) return;
+
+  // Lakukan extend sesi setiap 10 menit (TTL default sesi server = 30 menit)
+  sessionHeartbeatTimer = setInterval(() => {
+    extendSession();
+  }, 10 * 60 * 1000);
+}
+
+export function stopSessionKeepAlive() {
+  if (sessionHeartbeatTimer) {
+    clearInterval(sessionHeartbeatTimer);
+    sessionHeartbeatTimer = null;
+  }
+}
+
+/**
+ * Inisialisasi tampilan Navbar dan menu mobile
+ */
 export function initNavbarAuth() {
   const adminNavLink = document.getElementById("nav-admin-link");
   const authSlot = document.getElementById("nav-auth-slot");
 
   const loggedIn = isLoggedIn();
 
-  // 1. Tampilkan atau sembunyikan link "Panel Admin" jika elemen ada
   if (adminNavLink) {
-    if (loggedIn) {
-      adminNavLink.style.display = "";
-    } else {
-      adminNavLink.style.display = "none";
-    }
+    adminNavLink.style.display = loggedIn ? "" : "none";
   }
 
-  // 2. Render tombol di slot navigasi kedua
   if (authSlot) {
     if (loggedIn) {
+      const user = getAuthUser();
       authSlot.innerHTML = `
-        <div class="auth-logged-group">
+        <div class="auth-logged-group" style="display: flex; align-items: center; gap: 8px;">
           <a href="admin.html" class="btn-primary btn-nav-login" title="Buka Panel Admin">Panel Admin</a>
-          <button type="button" id="btn-navbar-logout" class="btn-logout-pill" title="Keluar dari sesi admin">Keluar</button>
+          <button type="button" id="btn-navbar-logout" class="btn-logout-pill" title="Keluar dari sesi admin (${user.username})">Keluar</button>
         </div>
       `;
 
@@ -208,7 +249,7 @@ export function initNavbarAuth() {
     }
   }
 
-  // 3. Pasang toggle untuk navigasi mobile (HP)
+  // Toggle navigasi mobile
   const mobileToggle = document.getElementById("btn-mobile-menu");
   const mainNav = document.getElementById("main-nav-menu");
   if (mobileToggle && mainNav && !mobileToggle.dataset.initialized) {
@@ -227,11 +268,20 @@ export function initNavbarAuth() {
   }
 }
 
-// Route Guard untuk halaman yang memerlukan otentikasi (admin.html)
-export function protectAdminPage() {
+/**
+ * Route Guard untuk halaman admin (admin.html)
+ */
+export async function protectAdminPage() {
   if (!isLoggedIn()) {
-    // Redirect ke halaman login jika belum login
+    window.location.replace("login.html?redirect=admin.html");
+    return;
+  }
+
+  startSessionKeepAlive();
+
+  // Validasi sesi aktif ke server secara asynchronous
+  const isValid = await extendSession();
+  if (!isValid && !isLoggedIn()) {
     window.location.replace("login.html?redirect=admin.html");
   }
 }
-

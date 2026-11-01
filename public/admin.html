@@ -46,134 +46,430 @@
     </nav>
   </header>
 
-  <main class="site-main" style="padding: 40px 80px 80px 80px;">
+  <main class="site-main admin-main-container">
     <div style="max-width: 1280px; margin: 0 auto;">
       <div class="section-head">
         <span class="section-tag">Administrasi Basis Data</span>
         <h1 class="section-title">Pusat Pendaftaran & Entri Data Petak Sawah</h1>
-        <p style="color: var(--text-muted); font-size: 0.9375rem; margin-top: 6px;">Pendaftaran petak sawah baru ke dalam relasi data_sawah. Data yang ditambahkan akan otomatis dianalisis kelayakannya untuk data center AI.</p>
+        <p style="color: var(--text-muted); font-size: 0.9375rem; margin-top: 6px;">Pendaftaran petak sawah baru ke dalam relasi <code>data_sawah</code>. Mendukung input data satuan, banyak baris sekaligus (Array Grid), serta import format JSON Array.</p>
       </div>
 
-      <div class="admin-grid">
-        <!-- Form Utama: Tambah Petak Sawah Baru -->
-        <section class="admin-card">
-          <div class="admin-card-header">
-            <h2>Pendaftaran Petak Sawah Baru</h2>
-            <p>Operasi <code>INSERT INTO data_sawah</code> dengan aturan relasional.</p>
+      <!-- Mode Selector Tabs: Satuan vs Banyak Data (Batch) vs JSON Array -->
+      <div class="admin-mode-selector" role="tablist" aria-label="Pilihan Metode Input">
+        <button type="button" class="admin-mode-tab active" data-target="mode-single-pane" role="tab" aria-selected="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          Formulir Satuan
+        </button>
+        <button type="button" class="admin-mode-tab" data-target="mode-batch-pane" role="tab" aria-selected="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="3" y1="15" x2="21" y2="15"></line>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <line x1="15" y1="3" x2="15" y2="21"></line>
+          </svg>
+          Entri Banyak Baris (Tabel Array)
+        </button>
+        <button type="button" class="admin-mode-tab" data-target="mode-json-pane" role="tab" aria-selected="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Import Format JSON Array
+        </button>
+      </div>
+
+      <!-- 1. PANE MODE FORMULIR SATUAN -->
+      <div id="mode-single-pane" class="batch-mode-container active">
+        <div class="admin-grid">
+          <section class="admin-card">
+            <div class="admin-card-header">
+              <h2>Pendaftaran Petak Sawah Baru (Satuan)</h2>
+              <p>Operasi <code>POST /api/data_sawah</code> dengan 1 objek data relasional.</p>
+            </div>
+
+            <form id="form-add-sawah" class="admin-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-persil">Nomor Persil Resmi <span class="required">*</span></label>
+                  <input type="text" id="input-persil" placeholder="Contoh: PRS-6011" required>
+                  <span class="form-help">Nomor identifikasi petak resmi dari kantor desa / BPN.</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="input-luas">Luas Lahan (Hektar) <span class="required">*</span></label>
+                  <input type="number" id="input-luas" step="0.1" min="0.1" placeholder="Contoh: 10.5" required>
+                  <span class="form-help">Skala fasilitas data center AI umumnya membutuhkan lahan &ge; 5 Hektar.</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <div class="label-with-action">
+                    <label for="select-pemilik">Pemilik Lahan (Foreign Key) <span class="required">*</span></label>
+                    <button type="button" id="btn-open-pemilik-modal" class="btn-link">+ Tambah Baru</button>
+                  </div>
+                  <select id="select-pemilik" required>
+                    <option value="">-- Pilih Pemilik Terdaftar --</option>
+                  </select>
+                  <span class="form-help">Merujuk ke tabel relasi <code>pemilik.id</code>.</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="select-wilayah">Wilayah Administratif (Foreign Key) <span class="required">*</span></label>
+                  <select id="select-wilayah" required>
+                    <option value="">-- Pilih Desa / Kecamatan --</option>
+                  </select>
+                  <span class="form-help">Merujuk ke tabel referensi master <code>wilayah.id</code>.</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="select-jenis-sawah">Jenis Pengairan Sawah <span class="required">*</span></label>
+                  <select id="select-jenis-sawah" required>
+                    <option value="Tadah Hujan">Tadah Hujan</option>
+                    <option value="Setengah Teknis">Setengah Teknis</option>
+                    <option value="Irigasi Teknis">Irigasi Teknis</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="select-status-hukum">Status Hukum Lahan (Foreign Key) <span class="required">*</span></label>
+                  <select id="select-status-hukum" required>
+                    <!-- Diisi dinamis -->
+                  </select>
+                  <span class="form-help">Menentukan izin alih fungsi non-pertanian.</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-lat">Titik Garis Lintang (Latitude) <span class="required">*</span></label>
+                  <input type="number" id="input-lat" step="0.0001" placeholder="Contoh: -6.3458" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="input-lng">Titik Garis Bujur (Longitude) <span class="required">*</span></label>
+                  <input type="number" id="input-lng" step="0.0001" placeholder="Contoh: 107.3124" required>
+                </div>
+              </div>
+
+              <div style="margin-top: 10px;">
+                <button type="submit" class="btn-primary full-width">Simpan Petak Sawah ke Basis Data</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Aside Info -->
+          <aside style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="admin-card">
+              <div class="admin-card-header" style="margin-bottom: 14px; padding-bottom: 10px;">
+                <h2>Integritas Relasional RDBMS</h2>
+              </div>
+              <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 14px;">Formulir ini menerapkan batasan kunci asing (Foreign Key):</p>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.8125rem; color: var(--text-muted);">
+                <li style="border-left: 3px solid var(--primary-green); padding-left: 10px;">
+                  <strong style="color: var(--text-dark);">pemilik_id:</strong> Menghubungkan kepemilikan ke tabel <code>pemilik</code>.
+                </li>
+                <li style="border-left: 3px solid var(--secondary-green); padding-left: 10px;">
+                  <strong style="color: var(--text-dark);">wilayah_id:</strong> Menghubungkan ke tabel master <code>wilayah</code> (sinkronisasi risiko bencana).
+                </li>
+                <li style="border-left: 3px solid var(--accent-gold); padding-left: 10px;">
+                  <strong style="color: var(--text-dark);">status_lahan_id:</strong> Memastikan kepatuhan terhadap perlindungan LP2B (UU No. 41 Tahun 2009).
+                </li>
+              </ul>
+            </div>
+
+            <div class="admin-card">
+              <div class="admin-card-header" style="margin-bottom: 14px; padding-bottom: 10px;">
+                <h2>Pintasan Entitas Pemilik</h2>
+              </div>
+              <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">Jika petani pengelola belum terdaftar di sistem:</p>
+              <button type="button" id="btn-open-pemilik-modal-side" class="btn-secondary full-width">+ Tambah Pemilik / Kelompok Tani</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- 2. PANE MODE BANYAK BARIS (DYNAMIC ARRAY GRID) -->
+      <div id="mode-batch-pane" class="batch-mode-container">
+        <section class="admin-card" style="padding: 28px;">
+          <div class="admin-card-header" style="margin-bottom: 16px;">
+            <h2>Entri Banyak Data Sawah Sekaligus (Batch Array Insert)</h2>
+            <p>Tambah baris data sebanyak yang Anda butuhkan, isi nilainya, lalu kirim sekaligus dalam satu payload array ke backend <code>POST /api/data_sawah</code>.</p>
           </div>
 
-          <form id="form-add-sawah" class="admin-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="input-persil">Nomor Persil Resmi <span class="required">*</span></label>
-                <input type="text" id="input-persil" placeholder="Contoh: PRS-6011" required>
-                <span class="form-help">Nomor identifikasi petak resmi dari kantor desa / BPN.</span>
-              </div>
-
-              <div class="form-group">
-                <label for="input-luas">Luas Lahan (Hektar) <span class="required">*</span></label>
-                <input type="number" id="input-luas" step="0.1" min="0.1" placeholder="Contoh: 10.5" required>
-                <span class="form-help">Skala fasilitas data center AI umumnya membutuhkan lahan &ge; 5 Hektar.</span>
-              </div>
+          <form id="form-batch-sawah">
+            <div class="batch-table-scroll-wrapper">
+              <table class="batch-input-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px; text-align: center;">#</th>
+                    <th style="min-width: 140px;">No. Persil <span class="required">*</span></th>
+                    <th style="min-width: 100px;">Luas (Ha) <span class="required">*</span></th>
+                    <th style="min-width: 180px;">Pemilik Lahan <span class="required">*</span></th>
+                    <th style="min-width: 200px;">Wilayah Desa/Kec <span class="required">*</span></th>
+                    <th style="min-width: 150px;">Jenis Sawah</th>
+                    <th style="min-width: 190px;">Status Hukum</th>
+                    <th style="min-width: 110px;">Latitude</th>
+                    <th style="min-width: 110px;">Longitude</th>
+                    <th style="width: 50px; text-align: center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="batch-table-body">
+                  <!-- Baris dinamis akan di-generate oleh admin.js -->
+                </tbody>
+              </table>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <div class="label-with-action">
-                  <label for="select-pemilik">Pemilik Lahan (Foreign Key) <span class="required">*</span></label>
-                  <button type="button" id="btn-open-pemilik-modal" class="btn-link">+ Tambah Baru</button>
-                </div>
-                <select id="select-pemilik" required>
-                  <option value="">-- Pilih Pemilik Terdaftar --</option>
-                </select>
-                <span class="form-help">Merujuk ke tabel relasi <code>pemilik.id</code>.</span>
+            <!-- Toolbar Kontrol Batch -->
+            <div class="batch-control-toolbar">
+              <div class="batch-left-buttons">
+                <button type="button" id="btn-add-batch-row" class="btn-pill-small btn-pill-outline" title="Tambah satu baris baru">+ Tambah Baris</button>
+                <button type="button" id="btn-add-batch-3rows" class="btn-pill-small btn-pill-outline" title="Tambah 3 baris sekaligus">+ Tambah 3 Baris</button>
+                <button type="button" id="btn-clear-batch-rows" class="btn-pill-small btn-pill-danger" title="Bersihkan baris tabel">Reset Baris</button>
               </div>
-
-              <div class="form-group">
-                <label for="select-wilayah">Wilayah Administratif (Foreign Key) <span class="required">*</span></label>
-                <select id="select-wilayah" required>
-                  <option value="">-- Pilih Desa / Kecamatan --</option>
-                </select>
-                <span class="form-help">Merujuk ke tabel referensi master <code>wilayah.id</code>.</span>
+              <div>
+                <button type="submit" id="btn-submit-batch" class="btn-primary" style="padding: 10px 24px;">
+                  Simpan Semua Baris Sebagai Array (<span id="batch-row-count-badge">0</span> Data)
+                </button>
               </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="select-jenis-sawah">Jenis Pengairan Sawah <span class="required">*</span></label>
-                <select id="select-jenis-sawah" required>
-                  <option value="Tadah Hujan">Tadah Hujan</option>
-                  <option value="Setengah Teknis">Setengah Teknis</option>
-                  <option value="Irigasi Teknis">Irigasi Teknis</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="select-status-hukum">Status Hukum Lahan (Foreign Key) <span class="required">*</span></label>
-                <select id="select-status-hukum" required>
-                  <!-- Diisi dinamis dari statusLahan -->
-                </select>
-                <span class="form-help">Menentukan izin alih fungsi non-pertanian.</span>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="input-lat">Titik Garis Lintang (Latitude) <span class="required">*</span></label>
-                <input type="number" id="input-lat" step="0.0001" placeholder="Contoh: -6.3458" required>
-              </div>
-
-              <div class="form-group">
-                <label for="input-lng">Titik Garis Bujur (Longitude) <span class="required">*</span></label>
-                <input type="number" id="input-lng" step="0.0001" placeholder="Contoh: 107.3124" required>
-              </div>
-            </div>
-
-            <div style="margin-top: 10px;">
-              <button type="submit" class="btn-primary full-width">Simpan Petak Sawah ke Basis Data</button>
             </div>
           </form>
         </section>
-
-        <!-- Informasi Konsep Relasi Basis Data -->
-        <aside style="display: flex; flex-direction: column; gap: 20px;">
-          <div class="admin-card">
-            <div class="admin-card-header" style="margin-bottom: 14px; padding-bottom: 10px;">
-              <h2>Integritas Relasional RDBMS</h2>
-            </div>
-            <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 14px;">Formulir ini menerapkan batasan kunci asing (Foreign Key):</p>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.8125rem; color: var(--text-muted);">
-              <li style="border-left: 3px solid var(--primary-green); padding-left: 10px;">
-                <strong style="color: var(--text-dark);">pemilik_id:</strong> Menghubungkan kepemilikan ke tabel <code>pemilik</code>.
-              </li>
-              <li style="border-left: 3px solid var(--secondary-green); padding-left: 10px;">
-                <strong style="color: var(--text-dark);">wilayah_id:</strong> Menghubungkan ke tabel master <code>wilayah</code> (sinkronisasi risiko banjir & gempa).
-              </li>
-              <li style="border-left: 3px solid var(--accent-gold); padding-left: 10px;">
-                <strong style="color: var(--text-dark);">status_lahan_id:</strong> Memastikan kepatuhan terhadap perlindungan LP2B (UU No. 41 Tahun 2009).
-              </li>
-            </ul>
-          </div>
-
-          <div class="admin-card">
-            <div class="admin-card-header" style="margin-bottom: 14px; padding-bottom: 10px;">
-              <h2>Pintasan Entitas Pemilik</h2>
-            </div>
-            <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">Jika petani pengelola belum terdaftar di sistem:</p>
-            <button type="button" id="btn-open-pemilik-modal-side" class="btn-secondary full-width">+ Tambah Pemilik / Kelompok Tani</button>
-          </div>
-        </aside>
       </div>
+
+      <!-- 3. PANE MODE IMPORT JSON ARRAY -->
+      <div id="mode-json-pane" class="batch-mode-container">
+        <section class="admin-card" style="padding: 28px;">
+          <div class="admin-card-header" style="margin-bottom: 16px;">
+            <h2>Import Data Format JSON Array (Batch Payload)</h2>
+            <p>Kirimkan array of objects JSON langsung ke backend <code>POST /api/data_sawah</code>. Cocok untuk integrasi data dari API eksternal atau berkas database ekspor.</p>
+          </div>
+
+          <form id="form-json-batch">
+            <div class="json-batch-editor-wrapper">
+              <div class="json-editor-topbar">
+                <div class="json-window-dots">
+                  <span class="dot dot-red"></span>
+                  <span class="dot dot-yellow"></span>
+                  <span class="dot dot-green"></span>
+                </div>
+                <span class="json-editor-title">payload.json &bull; Array of Objects</span>
+                <span id="json-syntax-indicator" class="json-indicator badge-neutral">Format: [ { ... } ]</span>
+              </div>
+              <textarea id="json-array-input" class="json-textarea" spellcheck="false" placeholder="[\n  {\n    &quot;nomor_persil&quot;: &quot;PRS-9001&quot;,\n    &quot;luas_hektar&quot;: 12.5,\n    ...\n  }\n]"></textarea>
+            </div>
+
+            <div class="batch-control-toolbar">
+              <div class="batch-left-buttons">
+                <button type="button" id="btn-load-json-sample" class="btn-pill-small btn-pill-outline">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                  Muat Contoh Array Valid
+                </button>
+                <button type="button" id="btn-format-json" class="btn-pill-small btn-pill-outline">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                    <line x1="9" y1="20" x2="15" y2="20"></line>
+                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                  </svg>
+                  Format / Rapikan JSON
+                </button>
+              </div>
+              <div>
+                <button type="submit" id="btn-submit-json-batch" class="btn-primary" style="padding: 10px 24px;">
+                  Kirim Data Array JSON ke Backend
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- 4. TABEL PENGELOLAAN & CRUD DATA SAWAH LENGKAP -->
+      <section class="admin-data-manager-section" aria-label="Manajemen Data Sawah">
+        <div class="manager-header-bar">
+          <div class="manager-title-group">
+            <h2>Daftar & Pengelolaan Petak Sawah (CRUD)</h2>
+            <p>Kelola seluruh petak sawah dari server MySQL live. Mendukung pengeditan individual dan penghapusan banyak data sekaligus (Batch Delete Array).</p>
+          </div>
+
+          <div class="manager-actions-row">
+            <div class="search-input-wrapper">
+              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="admin-search-input" placeholder="Cari ID, Persil, Pemilik, Desa...">
+            </div>
+            <button type="button" id="btn-admin-refresh" class="btn-action-tool" title="Segarkan data dari server live">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Refresh
+            </button>
+            <button type="button" id="btn-admin-export-json" class="btn-action-tool btn-action-export" title="Ekspor data sawah ke berkas JSON">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Ekspor JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- Toolbar Hapus & Ekspor Banyak Data Sekaligus (Batch Actions Toolbar) -->
+        <div id="batch-delete-banner" class="batch-delete-banner" style="display: none;">
+          <div class="batch-delete-info">
+            <span class="batch-badge-counter" id="selected-count-label">0</span>
+            <span>petak sawah dipilih untuk tindakan massal</span>
+          </div>
+          <div class="batch-banner-actions">
+            <button type="button" id="btn-batch-export-selected" class="btn-batch-action btn-batch-action-export" title="Ekspor baris terpilih ke berkas JSON">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Ekspor Terpilih (<span id="batch-export-count">0</span>)
+            </button>
+            <button type="button" id="btn-clear-selection" class="btn-batch-action btn-batch-action-cancel" title="Batalkan semua pilihan baris">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              Batal
+            </button>
+            <button type="button" id="btn-execute-batch-delete" class="btn-batch-action btn-batch-action-delete" title="Hapus seluruh baris yang dicentang">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              Hapus Terpilih
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabel Admin CRUD -->
+        <div class="table-container" style="box-shadow: none; border: 1px solid var(--border-color);">
+          <table class="data-table" aria-label="Tabel Petak Sawah Admin">
+            <thead>
+              <tr>
+                <th style="width: 44px; text-align: center;">
+                  <input type="checkbox" id="check-all-rows" class="table-checkbox" title="Pilih Semua Baris">
+                </th>
+                <th>ID & No. Persil</th>
+                <th>Pemilik</th>
+                <th>Lokasi Wilayah</th>
+                <th>Luas & Tipe</th>
+                <th>Status Hukum Lahan</th>
+                <th style="text-align: center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body">
+              <!-- Diisi secara dinamis oleh admin.js -->
+            </tbody>
+          </table>
+        </div>
+        <div id="admin-table-count" class="cell-sub" style="margin-top: 12px; font-weight: 600;">
+          Memuat data sawah...
+        </div>
+      </section>
+
     </div>
   </main>
 
-  <!-- Modal Tambah Pemilik Baru (INSERT INTO pemilik) -->
+  <!-- MODAL EDIT PETAK SAWAH (PUT /api/data_sawah) -->
+  <div id="edit-sawah-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-sawah-title">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-card-header">
+        <div>
+          <h2 id="edit-sawah-title">Perbarui Data Petak Sawah</h2>
+          <span class="modal-card-sub">Operasi <code>PUT /api/data_sawah</code> (Update Data)</span>
+        </div>
+        <button type="button" id="edit-sawah-close-btn" class="modal-close" aria-label="Tutup modal edit">&times;</button>
+      </div>
+
+      <form id="form-edit-sawah" class="modal-card-body">
+        <input type="hidden" id="edit-sawah-id">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-persil">Nomor Persil <span class="required">*</span></label>
+            <input type="text" id="edit-persil" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-luas">Luas Lahan (Ha) <span class="required">*</span></label>
+            <input type="number" id="edit-luas" step="0.1" min="0.1" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-select-pemilik">Pemilik Lahan <span class="required">*</span></label>
+            <select id="edit-select-pemilik" required></select>
+          </div>
+          <div class="form-group">
+            <label for="edit-select-wilayah">Wilayah Administratif <span class="required">*</span></label>
+            <select id="edit-select-wilayah" required></select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-select-jenis">Jenis Pengairan <span class="required">*</span></label>
+            <select id="edit-select-jenis" required>
+              <option value="Tadah Hujan">Tadah Hujan</option>
+              <option value="Setengah Teknis">Setengah Teknis</option>
+              <option value="Irigasi Teknis">Irigasi Teknis</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-select-status">Status Hukum Lahan <span class="required">*</span></label>
+            <select id="edit-select-status" required></select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-lat">Latitude <span class="required">*</span></label>
+            <input type="number" id="edit-lat" step="0.0001" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-lng">Longitude <span class="required">*</span></label>
+            <input type="number" id="edit-lng" step="0.0001" required>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="btn-cancel-edit" class="btn-pill-small btn-pill-outline">Batal</button>
+          <button type="submit" class="btn-primary" style="padding: 10px 24px;">Simpan Perubahan (PUT)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH PEMILIK BARU (INSERT INTO pemilik) -->
   <div id="pemilik-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="pemilik-modal-title">
     <div class="modal-card" style="max-width: 480px;">
       <div class="modal-card-header">
         <div>
           <h2 id="pemilik-modal-title">Tambah Pemilik Baru</h2>
-          <span class="modal-card-sub">Operasi <code>INSERT INTO pemilik</code></span>
+          <span class="modal-card-sub">Operasi <code>POST /api/pemilik</code></span>
         </div>
         <button type="button" id="pemilik-modal-close-btn" class="modal-close" aria-label="Tutup modal">&times;</button>
       </div>
@@ -200,6 +496,99 @@
           <button type="submit" class="btn-primary full-width">Simpan Pemilik ke Database</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL EKSPOR DATA SAWAH KE JSON -->
+  <div id="export-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-card-header">
+        <div>
+          <h2 id="export-modal-title">Ekspor Data ke Berkas JSON</h2>
+          <span class="modal-card-sub">Unduh kumpulan data sawah dalam format array JSON</span>
+        </div>
+        <button type="button" id="export-modal-close-btn" class="modal-close" aria-label="Tutup modal ekspor">&times;</button>
+      </div>
+
+      <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 18px;">
+        <!-- Pilihan Cakupan Data (Scope) -->
+        <div class="form-group">
+          <label style="font-weight: 700; margin-bottom: 8px; display: block; font-size: 0.875rem;">Cakupan Data yang Diekspor:</label>
+          <div class="export-cards-grid">
+            <label class="export-select-card" for="export-scope-all">
+              <input type="radio" name="export-scope" value="all" id="export-scope-all" checked>
+              <div class="export-card-text">
+                <span class="export-card-title">Semua Data Sawah</span>
+                <span class="export-card-sub"><strong id="export-total-count">0</strong> petak tersimpan</span>
+              </div>
+            </label>
+            <label class="export-select-card" for="export-scope-selected" id="export-scope-selected-wrapper">
+              <input type="radio" name="export-scope" value="selected" id="export-scope-selected">
+              <div class="export-card-text">
+                <span class="export-card-title">Hanya Data Terpilih</span>
+                <span class="export-card-sub"><strong id="export-selected-count">0</strong> petak dicentang</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Pilihan Format Struktur JSON -->
+        <div class="form-group">
+          <label style="font-weight: 700; margin-bottom: 8px; display: block; font-size: 0.875rem;">Format Struktur Berkas JSON:</label>
+          <div class="export-cards-column">
+            <label class="export-select-card" for="export-format-raw">
+              <input type="radio" name="export-format" value="raw" id="export-format-raw" checked>
+              <div class="export-card-text">
+                <span class="export-card-title">Format Tabel Standar / Raw (Kompatibel Import)</span>
+                <span class="export-card-desc">Kolom tabel murni (<code>id</code>, <code>nomor_persil</code>, <code>pemilik_id</code>, dsb). Cocok untuk backup data dan dapat langsung di-import kembali melalui tab <em>Import JSON Array</em>.</span>
+              </div>
+            </label>
+            <label class="export-select-card" for="export-format-joined">
+              <input type="radio" name="export-format" value="joined" id="export-format-joined">
+              <div class="export-card-text">
+                <span class="export-card-title">Format Relasional Lengkap (Joined View)</span>
+                <span class="export-card-desc">Menyertakan detail objek nama pemilik, desa, kecamatan, izin alih fungsi, dan skor kandidat data center. Cocok untuk analisis komprehensif.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Input Nama Berkas -->
+        <div class="form-group">
+          <label for="export-filename" style="font-weight: 700; font-size: 0.875rem;">Nama Berkas JSON:</label>
+          <div style="display: flex; align-items: center;">
+            <input type="text" id="export-filename" value="sibata_data_sawah.json" style="width: 100%; font-family: var(--font-mono); font-size: 0.875rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border-strong); padding: 9px 12px;">
+          </div>
+          <span class="form-help">Nama berkas yang akan diunduh ke komputer Anda.</span>
+        </div>
+
+        <!-- Preview ringkasan -->
+        <div id="export-preview-box" style="font-size: 0.8125rem; color: var(--primary-green); background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 14px; border-radius: var(--radius-sm);">
+          &#x2139; Siap mengekspor <strong id="export-preview-count">0</strong> data petak sawah.
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="export-modal-actions">
+          <button type="button" id="btn-export-copy" class="btn-export-action btn-outline" title="Salin data JSON ke clipboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Salin ke Clipboard
+          </button>
+          <button type="button" id="btn-cancel-export" class="btn-export-action btn-outline">
+            Batal
+          </button>
+          <button type="button" id="btn-confirm-export" class="btn-export-action btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Unduh file (.json)
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
