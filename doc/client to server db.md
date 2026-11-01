@@ -1,56 +1,204 @@
 # Dokumentasi Endpoint API & Komunikasi Data
 
-Semua endpoint yang memerlukan autentikasi sesi wajib menyertakan header `X-Sesion-ID` yang diperoleh dari proses *Login*. Middleware `extendSesion` akan memeriksa keabsahan sesi tersebut sebelum request diteruskan ke handler.
+Dokumentasi ini mengikuti implementasi endpoint `wilayah.js`.
+
+## Format Respon Standar
+
+Semua respon dari endpoint menggunakan struktur berikut:
+
+```json
+{
+  "status": "keterangan",
+  "is_err": false,
+  "data": []
+}
+```
+
+- `status` (`string`): keterangan hasil operasi, misalnya `"ok"`, `"not found"`, atau `"bad format"`.
+- `is_err` (`boolean`): `true` jika terjadi kesalahan dan `false` jika operasi berhasil atau menghasilkan kondisi non-error.
+- `data` (`object[]`): selalu berupa array. Isinya bergantung pada endpoint dan hasil operasi; dapat berupa daftar objek, daftar ID, atau array kosong.
+
+Catatan: implementasi menggunakan nama properti `status` dengan huruf kecil, bukan `Status`.
+
+## Autentikasi Sesi
+
+Endpoint `POST`, `PUT`, dan `DELETE` menggunakan middleware `extendSesion`, sehingga wajib menyertakan header:
+
+```http
+X-Sesion-ID: <sessionId>
+```
+
+Nilai sesi diperoleh dari proses *Login*. Endpoint `GET` pada implementasi ini tidak menggunakan middleware sesi.
 
 ---
 
-## 1. GET (Mengambil Data)
+## 1. GET — Mengambil Data
 
-Digunakan untuk mengambil daftar data dengan dukungan *pagination* dan pencarian.
+Mengambil daftar wilayah dengan dukungan pagination dan pencarian.
 
-* **Method:** `GET`
-* **URL:** `/api/{nama_resource}` (Contoh: `/api/sawah`)
-* **Headers:**
-  * `X-Sesion-ID: <sessionId>` *(Jika endpoint dilindungi middleware sesi)*
-* **Query Parameters:**
-  * `page` (number, opsional): Indeks halaman (jika `undefined` atau `null`, akan diset ke `0`).
-  * `size` (number, opsional): Ukuran data per halaman (jika `undefined` atau `null`, mengambil seluruh data).
-  * `search` (string, opsional): Kata kunci pencarian.
+- **Method:** `GET`
+- **URL:** `/api/wilayah`
+- **Query parameters:**
+  - `page` (`number`, opsional): indeks halaman, dimulai dari `0`. Jika tidak dikirim, nilainya `0`.
+  - `size` (`number`, opsional): jumlah data per halaman. Jika tidak dikirim, seluruh data diambil.
+  - `search` (`string`, opsional): kata kunci pencarian pada kolom `id` dan `nama`.
 
-### Respon Server
+### Respon
 
-#### Sukses — `200 OK`
+**Sukses — `200 OK`**
+
+`data` berisi array objek wilayah.
+
 ```json
 {
-    "status": "ok",
-    "data": [
-        {
-            "id": "12",
-            "some": "arum"
-        }
-    ]
+  "status": "ok",
+  "is_err": false,
+  "data": [
+    {
+      "id": "12",
+      "nama": "Wilayah Utara"
+    }
+  ]
 }
 ```
 
-#### Data Tidak Ditemukan — `404 Not Found`
+**Data tidak ditemukan — `404 Not Found`**
+
 ```json
 {
-    "status": "not found",
-    "data": []
+  "status": "not found",
+  "is_err": false,
+  "data": []
 }
 ```
 
-### Contoh Implementasi (JavaScript `fetch`)
+**Pagination tidak valid — `400 Bad Request`**
+
+Dikirim jika `page` atau `size` bukan bilangan bulat aman atau bernilai negatif.
+
+```json
+{
+  "status": "bad pagination",
+  "is_err": true,
+  "data": []
+}
+```
+
+**Database belum diinisialisasi atau tidak tersedia — `503 Service Unavailable`**
+
+Contoh status: `"db isnt initialize yet"` atau `"db isnt availabel"`.
+
+```json
+{
+  "status": "db isnt initialize yet",
+  "is_err": true,
+  "data": []
+}
+```
+
+**Kesalahan internal — `500 Internal Server Error`**
+
+Jika fungsi API mengembalikan `is_err: true`, objek hasil tersebut diteruskan sebagai respon.
+
+Jika bentuk `result.data` bukan array, server mengirim:
+
+```json
+{
+  "status": "invalid API response",
+  "is_err": true,
+  "data": []
+}
+```
+
+### Contoh `fetch`
+
 ```js
 const response = await fetch(
-    "http://192.168.1.10:3000/api/sawah?page=0&size=10&search=utara",
-    {
-        method: "GET",
-        headers: {
-            "X-Sesion-ID": "1f4d6a86791267"
-        }
-    }
+  "http://192.168.1.10:3000/api/wilayah?page=0&size=10&search=utara"
 );
+
+const result = await response.json();
+
+console.log(response.status, result.status, result.is_err, result.data);
+```
+
+---
+
+## 2. POST — Menambahkan Wilayah
+
+Menambahkan satu data wilayah.
+
+- **Method:** `POST`
+- **URL:** `/api/wilayah`
+- **Headers:**
+  - `Content-Type: application/json`
+  - `X-Sesion-ID: <sessionId>`
+- **Request body:** satu objek data, bukan array.
+
+```json
+{
+  "id": null,
+  "nama": "Wilayah Baru"
+}
+```
+
+### Respon
+
+**Berhasil — `201 Created`**
+
+```json
+{
+  "status": "ok",
+  "is_err": false,
+  "data": []
+}
+```
+
+**Format salah — `400 Bad Request`**
+
+Dikirim jika body bukan objek data tunggal (misalnya array, `null`, atau nilai primitif).
+
+```json
+{
+  "status": "bad format",
+  "is_err": true,
+  "data": []
+}
+```
+
+**Konflik ID — `409 Conflict`**
+
+`data` berisi ID yang mengalami konflik.
+
+```json
+{
+  "status": "conflict",
+  "is_err": false,
+  "data": ["id_konflik_1"]
+}
+```
+
+**Database tidak tersedia — `503 Service Unavailable`**
+
+Menggunakan format standar dengan `is_err: true` dan `data: []`.
+
+**Kesalahan internal — `500 Internal Server Error`**
+
+Jika fungsi API mengembalikan `is_err: true`, hasil tersebut diteruskan sebagai respon.
+
+### Contoh `fetch`
+
+```js
+const response = await fetch("http://192.168.1.10:3000/api/wilayah", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Sesion-ID": "1f4d6a86791267"
+  },
+  body: JSON.stringify({
+    nama: "Wilayah Baru"
+  })
+});
 
 const result = await response.json();
 console.log(response.status, result);
@@ -58,70 +206,162 @@ console.log(response.status, result);
 
 ---
 
-## 2. POST (Menambah Data Baru)
+## 3. PUT — Memperbarui Wilayah
 
-Digunakan untuk menambahkan data baru secara massal (berupa *array of objects*).
+Memperbarui satu data wilayah.
 
-* **Method:** `POST`
-* **URL:** `/api/{nama_resource}`
-* **Headers:**
-  * `Content-Type: application/json`
-  * `X-Sesion-ID: <sessionId>` *(Jika dilindungi sesi)*
-* **Request Body:** Berupa *array* objek data. Jika properti `id` tidak ada atau `null`, ID akan digenerate otomatis oleh database atau server.
+- **Method:** `PUT`
+- **URL:** `/api/wilayah`
+- **Headers:**
+  - `Content-Type: application/json`
+  - `X-Sesion-ID: <sessionId>`
+- **Request body:** satu objek data yang memuat `id` dan properti yang akan diperbarui.
+
+```json
+{
+  "id": "12",
+  "nama": "Wilayah Utara Baru"
+}
+```
+
+### Respon
+
+**Berhasil — `200 OK`**
+
+```json
+{
+  "status": "ok",
+  "is_err": false,
+  "data": []
+}
+```
+
+**Format salah — `400 Bad Request`**
+
+Dikirim jika body bukan objek data tunggal.
+
+```json
+{
+  "status": "bad format",
+  "is_err": true,
+  "data": []
+}
+```
+
+**ID tidak ditemukan — `404 Not Found`**
+
+`data` berisi ID yang tidak ditemukan.
+
+```json
+{
+  "status": "not found",
+  "is_err": false,
+  "data": ["id_yang_tidak_ada"]
+}
+```
+
+**Database tidak tersedia — `503 Service Unavailable`**
+
+Menggunakan format standar dengan `is_err: true` dan `data: []`.
+
+**Kesalahan internal — `500 Internal Server Error`**
+
+Jika fungsi API mengembalikan `is_err: true`, hasil tersebut diteruskan sebagai respon.
+
+### Contoh `fetch`
+
+```js
+const response = await fetch("http://192.168.1.10:3000/api/wilayah", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Sesion-ID": "1f4d6a86791267"
+  },
+  body: JSON.stringify({
+    id: "12",
+    nama: "Wilayah Utara Baru"
+  })
+});
+
+const result = await response.json();
+console.log(response.status, result);
+```
+
+---
+
+## 4. DELETE — Menghapus Wilayah
+
+Menghapus data wilayah berdasarkan kumpulan ID.
+
+- **Method:** `DELETE`
+- **URL:** `/api/wilayah`
+- **Headers:**
+  - `Content-Type: application/json`
+  - `X-Sesion-ID: <sessionId>`
+- **Request body:** array berisi string ID.
+
 ```json
 [
-    {
-        "id": null,
-        "nama": "Sawah Utara",
-        "luas": 12
-    }
+  "12",
+  "13"
 ]
 ```
 
-### Respon Server
+### Respon
 
-#### Sukses — `200 OK`
+**Berhasil — `200 OK`**
+
 ```json
 {
-    "status": "ok"
+  "status": "ok",
+  "is_err": false,
+  "data": []
 }
 ```
 
-#### Format Salah — `400 Bad Request`
-Dikirim jika *body* request bukan berupa *array of objects* yang valid.
+**Format salah — `400 Bad Request`**
+
+Dikirim jika body bukan array yang seluruh elemennya bertipe string.
+
 ```json
 {
-    "status": "bad format"
+  "status": "bad format",
+  "is_err": true,
+  "data": []
 }
 ```
 
-#### Konflik Data — `409 Conflict`
-Dikirim jika terdapat ID yang mengalami konflik.
+**ID tidak ditemukan — `404 Not Found`**
+
+`data` berisi ID yang tidak ditemukan.
+
 ```json
 {
-    "status": "conflict",
-    "conflictIDs": ["id_konflik_1"]
+  "status": "not found",
+  "is_err": false,
+  "data": ["13"]
 }
 ```
 
-### Contoh Implementasi (JavaScript `fetch`)
+**Database tidak tersedia — `503 Service Unavailable`**
+
+Menggunakan format standar dengan `is_err: true` dan `data: []`.
+
+**Kesalahan internal — `500 Internal Server Error`**
+
+Jika fungsi API mengembalikan `is_err: true`, hasil tersebut diteruskan sebagai respon.
+
+### Contoh `fetch`
+
 ```js
-const response = await fetch(
-    "http://192.168.1.10:3000/api/sawah",
-    {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Sesion-ID": "1f4d6a86791267"
-        },
-        body: JSON.stringify([
-            {
-                nama: "Sawah Baru",
-                luas: 15
-            }
-        ])
-    }
-);
+const response = await fetch("http://192.168.1.10:3000/api/wilayah", {
+  method: "DELETE",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Sesion-ID": "1f4d6a86791267"
+  },
+  body: JSON.stringify(["12", "13"])
+});
 
 const result = await response.json();
 console.log(response.status, result);
@@ -129,128 +369,11 @@ console.log(response.status, result);
 
 ---
 
-## 3. PUT (Memperbarui Data)
+## Catatan Implementasi
 
-Digunakan untuk memperbarui data yang sudah ada. Berdasarkan implementasi router, request body menerima *array of strings* (kumpulan ID atau data referensi pembaruan).
-
-* **Method:** `PUT`
-* **URL:** `/api/{nama_resource}`
-* **Headers:**
-  * `Content-Type: application/json`
-  * `X-Sesion-ID: <sessionId>`
-* **Request Body:**
-```json
-[
-    "id_data_1",
-    "id_data_2"
-]
-```
-
-### Respon Server
-
-#### Sukses — `200 OK`
-```json
-{
-    "status": "ok"
-}
-```
-
-#### Format Salah — `400 Bad Request`
-Dikirim jika *body* bukan berupa *array of strings*.
-```json
-{
-    "status": "bad format"
-}
-```
-
-#### Tidak Ditemukan — `404 Not Found`
-Dikirim jika ada ID yang tidak terdaftar di sistem.
-```json
-{
-    "status": "not found",
-    "missingIDs": ["id_yang_tidak_ada"]
-}
-```
-
-### Contoh Implementasi (JavaScript `fetch`)
-```js
-const response = await fetch(
-    "http://192.168.1.10:3000/api/sawah",
-    {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Sesion-ID": "1f4d6a86791267"
-        },
-        body: JSON.stringify(["769"])
-    }
-);
-
-const result = await response.json();
-console.log(response.status, result);
-```
-
----
-
-## 4. DELETE (Menghapus Data)
-
-Digunakan untuk menghapus elemen/data berdasarkan kumpulan ID. Catatan: Jika terdapat data lain yang memiliki relasi (*reference*) ke ID yang dihapus, maka data berelasi tersebut juga ikut terhapus.
-
-* **Method:** `DELETE`
-* **URL:** `/api/{nama_resource}`
-* **Headers:**
-  * `Content-Type: application/json`
-  * `X-Sesion-ID: <sessionId>`
-* **Request Body:** Berupa *array of objects* yang berisi informasi ID yang ingin dihapus.
-```json
-[
-    {
-        "id": "769"
-    }
-]
-```
-
-### Respon Server
-
-#### Sukses — `200 OK`
-```json
-{
-    "status": "ok"
-}
-```
-
-#### Format Salah — `400 Bad Request`
-```json
-{
-    "status": "bad format"
-}
-```
-
-#### Tidak Ditemukan — `404 Not Found`
-Dikirim jika ada ID yang gagal ditemukan saat proses penghapusan.
-```json
-{
-    "status": "not found",
-    "missingIDs": ["769"]
-}
-```
-
-### Contoh Implementasi (JavaScript `fetch`)
-```js
-const response = await fetch(
-    "http://192.168.1.10:3000/api/sawah",
-    {
-        method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Sesion-ID": "1f4d6a86791267"
-        },
-        body: JSON.stringify([
-            { id: "769" }
-        ])
-    }
-);
-
-const result = await response.json();
-console.log(response.status, result);
-```
+- `POST` dan `PUT` menerima **satu objek**, bukan array objek.
+- `DELETE` menerima **array string ID**, bukan array objek dengan properti `id`.
+- `GET` mencari berdasarkan kolom `id` dan `nama`.
+- Pada respon `"not found"` dan `"conflict"`, `is_err` bernilai `false`; kondisi tersebut dilaporkan melalui HTTP status dan nilai `status`.
+- `status` adalah string dan `data` selalu array pada respon yang dibentuk langsung oleh handler.
+- Ejaan nilai status di atas mengikuti implementasi saat ini, termasuk `"availabel"` pada pesan database tidak tersedia.
