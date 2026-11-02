@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIBATA - Modernisasi & Keberlanjutan Tata Lahan Sawah Jawa Barat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
 </head>
+
 <body>
 
   <!-- Header & Navigasi: Hanya Beranda, Tentang Kami, dan Login Admin -->
   <header class="site-header">
     <a href="index.html" class="logo" aria-label="Beranda SIBATA">
-      <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M11 20A7 7 0 0 1 4 13a7 7 0 0 1 7-7c1.5 0 2.9.5 4 1.3L12 10l6 1-1.3 4C17.5 17.1 18 18.5 18 20"></path>
         <path d="M12 10l9-7"></path>
       </svg>
@@ -22,13 +26,16 @@
     </a>
 
     <!-- Hamburger Button untuk Tampilan Ponsel (HP) -->
-    <button type="button" class="mobile-nav-toggle" id="btn-mobile-menu" aria-label="Buka navigasi menu" aria-expanded="false" aria-controls="main-nav-menu">
-      <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <button type="button" class="mobile-nav-toggle" id="btn-mobile-menu" aria-label="Buka navigasi menu"
+      aria-expanded="false" aria-controls="main-nav-menu">
+      <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="3" y1="12" x2="21" y2="12"></line>
         <line x1="3" y1="6" x2="21" y2="6"></line>
         <line x1="3" y1="18" x2="21" y2="18"></line>
       </svg>
-      <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+      <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
@@ -36,8 +43,9 @@
 
     <nav class="site-nav" id="main-nav-menu" aria-label="Navigasi Utama">
       <ul class="nav-links-wrapper">
-        <li><a href="index.html" class="nav-item-link active">Beranda</a></li>
+        <li><a href="#beranda" class="nav-item-link active">Beranda</a></li>
         <li><a href="#tentang-kami" class="nav-item-link">Tentang Kami</a></li>
+        <li><a href="#analisis-lahan" class="nav-item-link">Katalog</a></li>
         <li id="nav-auth-slot">
           <!-- Diisi otomatis oleh auth.js: Tombol Login Admin / Panel Admin -->
           <a href="login.html" class="btn-primary btn-nav-login">Login Admin</a>
@@ -49,13 +57,15 @@
   <main class="site-main">
 
     <!-- Hero Section dengan Background sawah.jpeg -->
-    <section class="hero" aria-label="Hero Banner Utama">
+    <section id="beranda" class="hero" aria-label="Hero Banner Utama">
       <div class="hero-content">
         <div class="hero-pill-badge">
-          <span>Kajian Tata Ruang Spasial Jawa Barat</span>
+          <span>Mari jadikan Jawa Barat Full AI</span>
         </div>
-        <h1>Modernisasi & Keberlanjutan Persawahan Jawa Barat untuk <span class="gold-highlight">Data Center AI</span></h1>
-        <p>Sistem evaluasi multikriteria yang menghubungkan perlindungan lahan sawah pangan (LP2B), keandalan pasokan daya listrik tegangan tinggi, dan mitigasi bencana alam untuk masa depan komputasi hijau.</p>
+        <h1>Luas dan Jumlah sawah di Jawa Barat yang tersedia untuk <span class="gold-highlight">Dijadikan Data Center
+            AI</span></h1>
+        <p>Pemetaan cerdas lahan sawah yang memenuhi kualifikasi teknis data center AI di Jawa Barat, tanpa mengorbankan
+          ketahanan pangan dan kawasan sawah abadi.</p>
         <div class="cta-group">
           <a href="#analisis-lahan" class="btn-primary btn-gold">Jelajahi Data Lahan</a>
           <a href="#tentang-kami" class="btn-secondary">Pelajari Selengkapnya</a>
@@ -68,7 +78,8 @@
       <div class="features">
         <div class="card">
           <div class="card-icon-frame" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
               <line x1="8" y1="2" x2="8" y2="18"></line>
               <line x1="16" y1="6" x2="16" y2="22"></line>
@@ -76,31 +87,36 @@
           </div>
           <div>
             <h3>Teknologi Spasial & Sensor</h3>
-            <p>Pemantauan kondisi kontur tanah, jenis pengairan sawah, dan risiko genangan air secara real-time berbasis GIS.</p>
+            <p>Pemantauan kondisi kontur tanah, jenis pengairan sawah, dan risiko genangan air secara real-time berbasis
+              GIS.</p>
           </div>
         </div>
 
         <div class="card">
           <div class="card-icon-frame" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
           </div>
           <div>
             <h3>Kepatuhan Regulasi LP2B</h3>
-            <p>Perlindungan ketat sawah produktif dari alih fungsi terlarang sesuai amanat Undang-Undang No. 41 Tahun 2009.</p>
+            <p>Perlindungan ketat sawah produktif dari alih fungsi terlarang sesuai amanat Undang-Undang No. 41 Tahun
+              2009.</p>
           </div>
         </div>
 
         <div class="card">
           <div class="card-icon-frame" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
           </div>
           <div>
             <h3>Kesiapan Infrastruktur AI</h3>
-            <p>Evaluasi kedekatan jarak ke gardu induk tegangan tinggi PLN serta ketersediaan tulang punggung serat optik.</p>
+            <p>Evaluasi kedekatan jarak ke gardu induk tegangan tinggi PLN serta ketersediaan tulang punggung serat
+              optik.</p>
           </div>
         </div>
       </div>
@@ -144,12 +160,19 @@
       <div class="about-grid">
         <div class="about-text">
           <span class="section-tag">Konteks Penelitian</span>
-          <h2 class="section-title" style="margin-bottom: 18px;">Tentang SIBATA Jawa Barat</h2>
+          <h2 class="section-title" style="margin-bottom: 18px;">Kenapa ini Penting?</h2>
           <p>
-            <strong>SIBATA</strong> (Sistem Informasi Tata Lahan Pertanian Jawa Barat untuk Lokasi Data Center AI) adalah sistem pendukung keputusan yang dikembangkan untuk menjawab tantangan strategis: pesatnya kebutuhan lahan komputasi kecerdasan buatan (AI Data Center) di koridor industri Jawa Barat tanpa mengorbankan kedaulatan pangan wilayah.
+            dirancang khusus untuk memetakan
+            luas, jumlah, dan sebaran petak sawah yang potensial dialihfungsikan menjadi kawasan Data Center AI. Sistem
+            ini menjembatani percepatan infrastruktur komputasi kecerdasan buatan di koridor industri Jawa Barat dengan
+            kepatuhan mutlak terhadap perlindungan kawasan sawah abadi (LP2B).
           </p>
           <p>
-            Dengan menerapkan skema basis data relasional ternormalisasi (RDBMS), SIBATA mengintegrasikan data fisik persil sawah, relasi kepemilikan petani, status hukum perlindungan LP2B, data risiko bencana alam per desa, serta kalkulasi proksimitas fasilitas penunjang (gardu listrik dan jaringan kabel serat optik).
+            Memanfaatkan arsitektur basis data relasional spasial, SIBATA menyajikan analisis menyeluruh mulai dari
+            identifikasi nomor persil, kepemilikan lahan, legalitas alih fungsi, profil risiko bencana alam (banjir,
+            gempa, longsor), hingga perhitungan jarak ke infrastruktur kritis seperti gardu induk PLN dan tulang
+            punggung
+            serat optik.
           </p>
           <a href="#analisis-lahan" class="btn-primary" style="margin-top: 10px;">Buka Katalog Sawah</a>
         </div>
@@ -157,8 +180,8 @@
         <!-- Frame Gambar Tentang Kami -->
         <div class="media-frame-about" aria-label="Visualisasi Tata Lahan Sawah">
           <span class="media-frame-tag">KORIDOR JAWA BARAT</span>
-          <h4>Hamparan Lahan Pertanian Berkelanjutan</h4>
-          <p>Pemetaan komprehensif di Kabupaten Karawang, Bekasi, Purwakarta, Subang, dan sekitarnya.</p>
+          <h4>Kesiapan Lahan Komputasi AI Masa Depan</h4>
+          <p>Pemetaan terpadu petak sawah siap alih fungsi di Kabupaten Karawang, Subang, Bekasi, dan sekitarnya.</p>
         </div>
       </div>
     </section>
@@ -167,19 +190,15 @@
     <section id="analisis-lahan" class="catalog-section" aria-label="Katalog Petak Sawah">
       <div class="section-head">
         <span class="section-tag">Basis Data Spasial</span>
-        <h2 class="section-title">Katalog Petak Sawah & Skor Kelayakan AI</h2>
+        <h2 class="section-title">Katalog Sawah</h2>
       </div>
 
       <!-- Toolbar Filter -->
       <section class="filter-panel" aria-label="Penyaringan Data">
         <div class="filter-group">
           <label for="search-input">Pencarian Petak</label>
-          <input 
-            type="text" 
-            id="search-input" 
-            placeholder="Cari nomor persil, pemilik, atau desa..."
-            autocomplete="off"
-          >
+          <input type="text" id="search-input" placeholder="Cari nomor persil, pemilik, atau desa..."
+            autocomplete="off">
         </div>
 
         <div class="filter-group">
@@ -272,11 +291,13 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <h4>SIBATA JAWA BARAT</h4>
-        <p>Sistem Informasi Tata Lahan Pertanian untuk Kajian Penentuan Lokasi Data Center AI berbasis Basis Data Relasional Spasial.</p>
+        <p>Sistem Informasi Tata Lahan Pertanian untuk Kajian Penentuan Lokasi Data Center AI berbasis Basis Data
+          Relasional Spasial.</p>
       </div>
       <nav class="footer-nav" aria-label="Navigasi Footer">
-        <a href="index.html">Beranda</a>
+        <a href="#beranda">Beranda</a>
         <a href="#tentang-kami">Tentang Kami</a>
+        <a href="#analisis-lahan">Katalog</a>
         <a href="login.html">Login Admin</a>
       </nav>
     </div>
@@ -288,4 +309,5 @@
 
   <script type="module" src="./js/dashboard.js"></script>
 </body>
+
 </html>

@@ -389,9 +389,66 @@ function initViewToggle() {
   }
 }
 
+// Logika Pelacakan Menu Navigasi Aktif (Scroll-Spy & Click Tracker)
+function initNavActiveTracker() {
+  const navLinks = document.querySelectorAll("#main-nav-menu a.nav-item-link");
+  if (!navLinks.length) return;
+
+  const sectionIds = ["beranda", "tentang-kami", "analisis-lahan"];
+  const sections = sectionIds
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+
+  function setActiveLink(activeId) {
+    navLinks.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (
+        href === `#${activeId}` ||
+        href === `index.html#${activeId}` ||
+        (activeId === "beranda" && (href === "index.html" || href === "#beranda"))
+      ) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+  }
+
+  // 1. Update aktif langsung saat menu diklik
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      const href = link.getAttribute("href");
+      if (href && href.startsWith("#")) {
+        setActiveLink(href.substring(1));
+      }
+    });
+  });
+
+  // 2. Pelacakan posisi scroll otomatis (Scroll-Spy)
+  if ("IntersectionObserver" in window && sections.length) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveLink(entry.target.id);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "-25% 0px -65% 0px",
+        threshold: 0
+      }
+    );
+
+    sections.forEach((sec) => observer.observe(sec));
+  }
+}
+
 // Inisialisasi Halaman Dashboard
 document.addEventListener("DOMContentLoaded", async () => {
   initNavbarAuth();
+  initNavActiveTracker();
   initDetailModal();
   initViewToggle();
 

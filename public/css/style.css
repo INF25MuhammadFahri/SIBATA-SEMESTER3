@@ -226,6 +226,7 @@ nav.site-nav {
 }
 
 .site-nav a.nav-item-link.active {
+  background-color: var(--secondary-green-light);
   color: var(--primary-green);
   font-weight: 700;
 }

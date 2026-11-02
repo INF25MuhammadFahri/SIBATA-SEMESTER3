@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIBATA - Masuk Panel Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
 </head>
+
 <body>
 
   <!-- Header & Navigasi -->
   <header class="site-header">
     <a href="index.html" class="logo" aria-label="Beranda SIBATA">
-      <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M11 20A7 7 0 0 1 4 13a7 7 0 0 1 7-7c1.5 0 2.9.5 4 1.3L12 10l6 1-1.3 4C17.5 17.1 18 18.5 18 20"></path>
         <path d="M12 10l9-7"></path>
       </svg>
@@ -22,13 +26,16 @@
     </a>
 
     <!-- Hamburger Button untuk Ponsel -->
-    <button type="button" class="mobile-nav-toggle" id="btn-mobile-menu" aria-label="Buka navigasi menu" aria-expanded="false" aria-controls="main-nav-menu">
-      <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <button type="button" class="mobile-nav-toggle" id="btn-mobile-menu" aria-label="Buka navigasi menu"
+      aria-expanded="false" aria-controls="main-nav-menu">
+      <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="3" y1="12" x2="21" y2="12"></line>
         <line x1="3" y1="6" x2="21" y2="6"></line>
         <line x1="3" y1="18" x2="21" y2="18"></line>
       </svg>
-      <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+      <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
@@ -38,6 +45,7 @@
       <ul class="nav-links-wrapper">
         <li><a href="index.html" class="nav-item-link">Beranda</a></li>
         <li><a href="index.html#tentang-kami" class="nav-item-link">Tentang Kami</a></li>
+        <li><a href="index.html#analisis-lahan" class="nav-item-link">Katalog</a></li>
         <li id="nav-auth-slot">
           <a href="login.html" class="btn-primary btn-nav-login">Login Admin</a>
         </li>
@@ -50,7 +58,8 @@
       <div class="login-card">
         <div class="login-card-header">
           <div class="login-icon-badge" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
@@ -64,13 +73,7 @@
         <form id="form-login" class="login-form">
           <div class="form-group">
             <label for="login-username">Nama Pengguna / Username <span class="required">*</span></label>
-            <input 
-              type="text" 
-              id="login-username" 
-              placeholder="Masukkan username (contoh: admin)" 
-              required
-              autocomplete="username"
-            >
+            <input type="text" id="login-username" placeholder="Masukkan username" required autocomplete="username">
           </div>
 
           <div class="form-group">
@@ -78,24 +81,14 @@
               <label for="login-password">Kata Sandi / Password <span class="required">*</span></label>
               <button type="button" id="btn-toggle-password" class="btn-link">Lihat</button>
             </div>
-            <input 
-              type="password" 
-              id="login-password" 
-              placeholder="Masukkan password" 
-              required
-              autocomplete="current-password"
-            >
+            <input type="password" id="login-password" placeholder="Masukkan password" required
+              autocomplete="current-password">
           </div>
 
           <button type="submit" class="btn-primary full-width" style="margin-top: 8px;">
             Masuk ke Panel Admin
           </button>
         </form>
-
-        <div class="login-demo-notice">
-          <strong>Kredensial Pengujian (Demo):</strong>
-          <p>Username: <code>admin</code> &bull; Password: <code>admin</code></p>
-        </div>
 
         <div class="login-card-footer">
           <a href="index.html" class="login-back-link">&larr; Kembali ke Beranda Publik</a>
@@ -113,6 +106,7 @@
       <nav class="footer-nav" aria-label="Navigasi Footer">
         <a href="index.html">Beranda</a>
         <a href="index.html#tentang-kami">Tentang Kami</a>
+        <a href="index.html#analisis-lahan">Katalog</a>
         <a href="login.html">Login Admin</a>
       </nav>
     </div>
@@ -123,4 +117,5 @@
 
   <script type="module" src="./js/login.js"></script>
 </body>
+
 </html>
