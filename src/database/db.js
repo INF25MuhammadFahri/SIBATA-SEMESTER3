@@ -1,5 +1,8 @@
 import mysql from "mysql2/promise";
 import * as initial from "./init.js";
+/**
+* @type {mysql.Pool} db
+*/
 let db = null;
 export async function init(){
     console.log("DB_HOST:", process.env.DB_HOST);
@@ -16,6 +19,14 @@ export async function init(){
         connectionLimit: 10
     });
   return await initial.init(db);
+}
+//memastikan db sudah init
+export function withDB(callback) {
+    if (!db) {
+        throw new Error("Database belum diinisialisasi");
+    }
+
+    return callback(db);
 }
 /* ------------------------------------------------------------------ */
 /* Helper                                                              */

@@ -72,5 +72,5 @@ missing_id:string[]
 - jika id tidak di temukan di kembalikan dalam
   bentuk array berupa kumpulan id yang tidak
   ditemukan
-- jika terdapat id yang me-reference ke id yang di hapus
-  maka data tersebut ikut terhapus
+- ~~jika terdapat id yang me-reference ke id yang di hapus
+  maka data tersebut ikut terhapus~~ keputusan terhapus kembalikan ke database

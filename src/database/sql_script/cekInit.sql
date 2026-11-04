@@ -2,7 +2,7 @@
 -- Read-only: tidak membuat, mengubah, atau menghapus database/tabel/data.
 -- Jalankan dari client SQL yang memiliki akses ke INFORMATION_SCHEMA.
 
-SET @target_db := 'db_sawah';
+
 
 -- 1) Database tersedia?
 SELECT

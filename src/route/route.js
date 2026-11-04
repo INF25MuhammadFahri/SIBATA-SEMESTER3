@@ -7,7 +7,7 @@ export * as kandidat_lokasi from "./internal/kandidat_lokasi.js";
 export * as status_lahan from "./internal/status_lahan.js";
 export * as pemilik from "./internal/pemilik.js";
 export * as kabupaten_kota from "./internal/kabupaten_kota.js";
-
+export * as sawah_infrastruktur from "./internal/sawah_infrastruktur.js";
 /**
  * Endpoint gabungan (joined data) untuk kebutuhan visualisasi dashboard frontend
  */
@@ -27,7 +27,9 @@ export async function getJoined(req, res) {
     });
   }
 }
-
+export async function getDbStatus(req,res){
+  res.status(200).json(api.databaseStatus());
+}
 // Test endpoints
 export async function get(req, res) {
   res.status(200).json({

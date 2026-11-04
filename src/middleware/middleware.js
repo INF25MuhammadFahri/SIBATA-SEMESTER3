@@ -59,6 +59,32 @@ export async function extendSesion(req,res,next){
   }
 }
 /**
+ * Middleware: user harus punya SEMUA role yang diminta.
+ * @param {string[]} roles
+ * @returns {express.RequestHandler}
+ */
+export function checkroles(roles) {
+  return async (req, res, next) => {
+    try {
+      const status = await sesi.getSession(req.get("X-Sesion-ID"));
+      if (!status?.session) {
+        return res.status(401).json({ status: "not logged in" });
+      }
+
+      const account = await acc.getUser(status.session.userId);
+      const allowed = !!account && roles.every((r) => account.roles.includes(r));
+
+      if (!allowed) {
+        return res.status(403).json({ status: "you dont have permision" });
+      }
+
+      next();
+    } catch (err) {
+      next(err); // Express 4 tidak menangkap error dari fungsi async
+    }
+  };
+}
+/**
 * @param {express.Request} req 
 * @param {express.Response} res 
 */

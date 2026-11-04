@@ -144,11 +144,7 @@ export async function delInfrastruktur(ids) {
         const toDelete = wanted.filter(id => found.has(id));
 
         if (toDelete.length > 0) {
-            try {
-                await db.deleteRows({ from: "sawah_infrastruktur", where: { infrastruktur_id: toDelete } });
-            } catch (e) {
-                // foreign key cascade may handle this
-            }
+            
             await db.deleteRows({
                 from: TABLE,
                 where: { id: toDelete }
