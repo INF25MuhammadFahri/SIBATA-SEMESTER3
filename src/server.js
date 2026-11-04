@@ -5,6 +5,8 @@ import * as data from "./common_data.js";
 import * as midle from "./middleware/middleware.js";
 import * as route from "./route/route.js";
 import * as api from "./api/api.js";
+import * as cli from "./cli/cli.js";
+import * as db from "./database/db.js";
 import cors from "cors";
 import { fileURLToPath } from "node:url";
 
@@ -69,7 +71,7 @@ app.use("/api/status_lahan", route.status_lahan.router);
 app.use("/api/pemilik", route.pemilik.router);
 app.use("/api/kabupaten_kota", route.kabupaten_kota.router);
 app.get("/api/joined", route.getJoined);
-
+app.get("/api/databaseStatus",route.getDbStatus);
 // Inisialisasi API & Database (tunggu hingga siap sebelum mendengarkan request)
 await api.init();
 
@@ -103,19 +105,37 @@ app.use((err, req, res, next) => {
 // Jalankan server
 const server = app.listen(PORT, HOST, () => {
     console.log(`Server: http://${HOST}:${PORT}`);
+    cli.init();
 });
-
+//process.stdin.setRawMode(false);
 // Shutdown secara teratur
-function shutdown() {
-    console.log("Menghentikan server...");
+import { promisify } from "node:util";
 
-    server.close((err) => {
-        if (err) {
-            console.error(err);
-            process.exitCode = 1;
-        }
-    });
+const closeServer = promisify(server.close.bind(server));
+
+async function ashut() {
+    await closeServer();
+
+    if (db.db) {
+        await db.db.end();
+    }
+
+    cli.close();
 }
 
+async function shutdown() {
+    console.log("Menghentikan server...");
+
+    try {
+        await ashut();
+
+        console.log("Semua proses shutdown selesai.");
+
+        process.exit();
+    } catch (err) {
+        console.error("Shutdown error:", err);
+        process.exitCode = 1;
+    }
+}
 process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);

@@ -7,6 +7,7 @@ export * as statusLahan from "./internal/status_lahan_api.js";
 export * as statudLahan from "./internal/status_lahan_api.js";
 export * as pemilik from "./internal/pemilik_api.js";
 export * as kabupatenKota from "./internal/kabupaten_kota_api.js";
+export * as sawah_infrastruktur from "./internal/sawah_infrastruktur_api.js"
 import * as commondata from "../common_data.js";
 
 export async function init() {
@@ -17,7 +18,9 @@ export async function init() {
     console.error("Database init error:", err.message);
   }
 }
-
+export function databaseStatus(){
+  return commondata.dbstatus;
+}
 /**
  * Mengambil seluruh data relasional yang digabungkan (JOIN)
  */

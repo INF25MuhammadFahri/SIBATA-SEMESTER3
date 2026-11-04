@@ -11,17 +11,8 @@ const TABLE = "wilayah";
 /** Kolom yang dicari saat parameter `search` diisi (OR antar kolom). */
 const SEARCH_COLUMNS = ["nama"];
 
-/**
- * Tabel/kolom yang me-reference `wilayah.id`. Baris di sini ikut dihapus
- * saat wilayah dihapus (cascade manual).
- *
- * Kalau di init.js sudah memakai FOREIGN KEY ... ON DELETE CASCADE,
- * biarkan kosong. Contoh isi (self-reference, mis. kabupaten -> provinsi):
- *   { table: "wilayah", column: "parent_id" }
- *
- * @type {{ table: string, column: string }[]}
- */
-const REFERENCES = [];
+
+
 
 /* ------------------------------------------------------------------ */
 /* Helper                                                              */
@@ -46,35 +37,7 @@ async function idExists(id) {
     return (await db.countRows(TABLE, { id })) > 0;
 }
 
-/**
- * Hapus baris berdasarkan id beserta seluruh baris yang me-reference-nya.
- * @param {string[]} ids
- */
-async function cascadeDelete(ids) {
-    if (ids.length === 0) return;
 
-    for (const ref of REFERENCES) {
-        if (ref.table === TABLE) {
-            // self-reference: hapus anak (dan cucunya) lebih dulu
-            const children = await db.select({
-                from: ref.table,
-                columns: ["id"],
-                where: { [ref.column]: ids }
-            });
-            const childIds = children
-                .map(r => String(r.id))
-                .filter(id => !ids.includes(id)); // cegah loop tak berujung
-            await cascadeDelete(childIds);
-        } else {
-            await db.deleteRows({
-                from: ref.table,
-                where: { [ref.column]: ids }
-            });
-        }
-    }
-
-    await db.deleteRows({ from: TABLE, where: { id: ids } });
-}
 
 /* ------------------------------------------------------------------ */
 /* GET                                                                 */
@@ -237,8 +200,6 @@ export async function delWilayah(ids) {
 
         const found = new Set(rows.map(r => String(r.id)));
         const missingId = wanted.filter(id => !found.has(id));
-
-        await cascadeDelete(wanted.filter(id => found.has(id)));
 
         return createSuccsesReturn(missingId);
     } catch (err) {
