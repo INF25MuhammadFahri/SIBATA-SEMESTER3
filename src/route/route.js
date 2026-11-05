@@ -8,6 +8,7 @@ export * as status_lahan from "./internal/status_lahan.js";
 export * as pemilik from "./internal/pemilik.js";
 export * as kabupaten_kota from "./internal/kabupaten_kota.js";
 export * as sawah_infrastruktur from "./internal/sawah_infrastruktur.js";
+export * as akun_manager from "./internal/Akun_manager.js";
 /**
  * Endpoint gabungan (joined data) untuk kebutuhan visualisasi dashboard frontend
  */

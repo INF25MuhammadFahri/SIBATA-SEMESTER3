@@ -5,7 +5,7 @@ import * as db from "../../database/db.js";
 
 const TABLE = "accounts";
 const scryptAsync = promisify(scrypt);
-
+//file:accounts_manager.js
 /* ------------------------------------------------------------------ */
 /* Password (hash scrypt bawaan Node, tanpa dependency tambahan)       */
 /* Format tersimpan: scrypt$<salt base64>$<hash base64>                */

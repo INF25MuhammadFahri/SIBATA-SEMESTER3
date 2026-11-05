@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIBATA - Panel Admin (Manajemen Lahan Sawah)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/user_account.css">
+</head>
+
+<body>
+
+  <!-- Header & Navigasi -->
+  <header class="site-header">
+    <a href="index.html" class="logo" aria-label="Beranda SIBATA">
+      <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M11 20A7 7 0 0 1 4 13a7 7 0 0 1 7-7c1.5 0 2.9.5 4 1.3L12 10l6 1-1.3 4C17.5 17.1 18 18.5 18 20"></path>
+        <path d="M12 10l9-7"></path>
+      </svg>
+      <span>SIBATA</span>
+    </a>
+
+    <!-- Hamburger Button untuk Ponsel -->
+    <button type="button" class="mobile-nav-toggle" id="btn-mobile-menu" aria-label="Buka navigasi menu"
+      aria-expanded="false" aria-controls="main-nav-menu">
+      <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+      <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <nav class="site-nav" id="main-nav-menu" aria-label="Navigasi Utama">
+      <ul class="nav-links-wrapper">
+        <li><a href="/" class="nav-item-link">Beranda</a></li>
+        <li><a href="/#tentang-kami" class="nav-item-link">Tentang Kami</a></li>
+        <li><a href="/#analisis-lahan" class="nav-item-link">Katalog</a></li>
+        <selipan></selipan>
+        <!--li><a href="user_account.html" class="nav-item-link active" aria-current="page">User</a></!li-->
+        <li id="nav-auth-slot">
+          <!-- Diisi otomatis oleh auth.js -->
+          <a href="admin" class="btn-primary btn-nav-login">Panel Admin</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="site-main admin-main-container">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div class="section-head">
+        <span class="section-tag">Data Akun</span>
+        <h1 class="section-title">Data akun Anda tertera di bawah</h1>
+        <p style="color: var(--text-muted); font-size: 0.9375rem; margin-top: 6px;">Informasi akun dan sesi login yang
+          sedang aktif di perangkat ini.</p>
+      </div>
+
+      <div id="account-alert" class="account-alert" role="status" aria-live="polite" hidden></div>
+
+      <div class="admin-grid account-grid">
+        <!-- Kartu Profil -->
+        <section class="admin-card" aria-labelledby="account-card-title">
+          <div class="account-profile">
+            <div class="account-avatar" id="account-avatar" aria-hidden="true">?</div>
+            <div class="account-identity">
+              <h2 id="account-card-title"><span id="account-display-name">Memuat...</span></h2>
+              <p id="account-username-sub">@-</p>
+            </div>
+          </div>
+
+          <dl class="account-details">
+            <div class="account-row">
+              <dt>Nama pengguna</dt>
+              <dd id="account-username">-</dd>
+            </div>
+            <div class="account-row">
+              <dt>Nama tampilan</dt>
+              <dd id="account-name">-</dd>
+            </div>
+            <div class="account-row">
+              <dt>Peran</dt>
+              <dd id="account-roles" class="account-roles">-</dd>
+            </div>
+          </dl>
+
+          <div class="account-actions">
+            <a href="admin" id="btn-open-admin" class="btn-pill-small btn-pill-primary" hidden>Buka Panel Admin</a>
+            <button type="button" id="btn-account-logout" class="btn-pill-small btn-pill-danger">Keluar</button>
+          </div>
+        </section>
+
+        <!-- Kartu Sesi -->
+        <section class="admin-card" aria-labelledby="session-card-title">
+          <div class="admin-card-header">
+            <h2 id="session-card-title">Sesi login</h2>
+            <p>Sesi berlaku <span id="session-ttl">30</span> menit sejak aktivitas terakhir.</p>
+          </div>
+
+          <dl class="account-details account-details-stacked">
+            <div class="account-row">
+              <dt>Status</dt>
+              <dd><span id="session-status" class="badge badge-neutral">Memverifikasi...</span></dd>
+            </div>
+            <div class="account-row">
+              <dt>ID sesi</dt>
+              <dd class="session-id-group">
+                <code id="session-id" class="session-id">-</code>
+                <button type="button" id="btn-toggle-session-id" class="btn-pill-small btn-pill-outline">Lihat</button>
+                <button type="button" id="btn-copy-session-id" class="btn-pill-small btn-pill-outline">Salin</button>
+              </dd>
+            </div>
+            <div class="account-row">
+              <dt>Terakhir diperpanjang</dt>
+              <dd id="session-last-extend">-</dd>
+            </div>
+          </dl>
+
+          <div class="account-actions">
+            <button type="button" id="btn-extend-session" class="btn-pill-small btn-pill-primary">Perpanjang sesi</button>
+          </div>
+          <p class="form-help" style="margin-top: 12px;">Sesi diperpanjang otomatis setiap 10 menit selama halaman ini
+            terbuka.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+  
+  
+  
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>Kelompok 10</h4>
+        <p>Luas dan Jumlah sawah di Jawa Barat yang tersedia untuk Dijadikan Data Center AI.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Navigasi Footer">
+        <a href="index.html">Beranda</a>
+        <a href="index.html#tentang-kami">Tentang Kami</a>
+        <a href="index.html#analisis-lahan">Katalog</a>
+        <a href="login.html">Login Admin</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+    </div>
+  </footer>
+
+  <script type="module" src="./js/user_account.js"></script>
+</body>
+
+</html>

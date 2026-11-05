@@ -26,22 +26,34 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Frontend statis
+
 app.use(express.static(
     path.resolve(__dirname, "../public")
 ));
-
 // Route halaman utama (Dashboard)
 app.get(["/", "/dashboard"], (req, res) => {
     res.sendFile(
         path.resolve(__dirname, "../public/index.html")
     );
 });
+app.get("/user_account", (req, res) => {
+    res.sendFile(
+        path.resolve(__dirname, "../public/user_account.html")
+    );
+});
 
 // Route panel admin
 app.get("/admin", (req, res) => {
+    
+      res.sendFile(
+          path.resolve(__dirname, "../public/admin.html")
+      );
+    
+});
+app.get("/account_manager", (req, res) => {
     res.sendFile(
-        path.resolve(__dirname, "../public/admin.html")
-    );
+          path.resolve(__dirname, "../public/account_manager.html")
+      );
 });
 
 // Route halaman login
@@ -72,6 +84,7 @@ app.use("/api/pemilik", route.pemilik.router);
 app.use("/api/kabupaten_kota", route.kabupaten_kota.router);
 app.get("/api/joined", route.getJoined);
 app.get("/api/databaseStatus",route.getDbStatus);
+app.use("/api/accounts",route.akun_manager.router);
 // Inisialisasi API & Database (tunggu hingga siap sebelum mendengarkan request)
 await api.init();
 

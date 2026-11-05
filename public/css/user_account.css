@@ -1,0 +1,138 @@
+/* Tambahan khusus halaman Data Akun (user_account.html).
+   Memakai variabel dari style.css, jadi harus dimuat setelahnya. */
+
+.account-grid {
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+.account-alert {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  margin-bottom: 18px;
+  border: 1px solid transparent;
+}
+.account-alert[hidden] { display: none; }
+.account-alert.success {
+  background: var(--success-bg);
+  color: var(--success-color);
+  border-color: var(--success-border);
+}
+.account-alert.danger {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+  border-color: var(--danger-border);
+}
+
+.account-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid var(--border-color);
+}
+.account-avatar {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--primary-green);
+  color: var(--text-white);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.account-identity h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary-green);
+  overflow-wrap: anywhere;
+}
+.account-identity p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.account-details {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.account-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.account-row:last-child { border-bottom: 0; }
+.account-row dt {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.account-row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+.account-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.session-id-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.session-id {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  overflow-wrap: anywhere;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.account-actions [hidden] { display: none; }
+
+.btn-pill-primary {
+  background-color: var(--primary-green);
+  color: var(--text-white);
+  border-color: var(--primary-green);
+  text-decoration: none;
+}
+.btn-pill-primary:hover { background-color: var(--primary-green-hover); }
+.btn-pill-primary:disabled,
+.btn-pill-small:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+  .account-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .account-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
