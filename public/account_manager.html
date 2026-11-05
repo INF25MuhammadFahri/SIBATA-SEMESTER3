@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIBATA - Manajemen Akun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/user_account.css">
+  <link rel="stylesheet" href="./css/account_manager.css">
+</head>
+
+<body>
+
+  <!-- Header & Navigasi -->
+  <header class="site-header">
+    <a href="index.html" class="logo" aria-label="Beranda SIBATA">
+      <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M11 20A7 7 0 0 1 4 13a7 7 0 0 1 7-7c1.5 0 2.9.5 4 1.3L12 10l6 1-1.3 4C17.5 17.1 18 18.5 18 20"></path>
+        <path d="M12 10l9-7"></path>
+      </svg>
+      <span>SIBATA</span>
+    </a>
+
+    <!-- Hamburger Button untuk Ponsel -->
+    <button type="button" class="mobile-nav-toggle" id="btn-mobile-menu" aria-label="Buka navigasi menu"
+      aria-expanded="false" aria-controls="main-nav-menu">
+      <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+      <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <nav class="site-nav" id="main-nav-menu" aria-label="Navigasi Utama">
+      <ul class="nav-links-wrapper">
+        <li><a href="/" class="nav-item-link">Beranda</a></li>
+        <li><a href="/#tentang-kami" class="nav-item-link">Tentang Kami</a></li>
+        <li><a href="/#analisis-lahan" class="nav-item-link">Katalog</a></li>
+        
+        <selipan></selipan>
+        <li id="nav-auth-slot">
+          <!-- Diisi otomatis oleh auth.js -->
+          <a href="admin" class="btn-primary btn-nav-login">Panel Admin</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="site-main admin-main-container">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div class="section-head">
+        <span class="section-tag">Administrasi</span>
+        <h1 class="section-title">Manajemen Akun Pengguna</h1>
+        <p style="color: var(--text-muted); font-size: 0.9375rem; margin-top: 6px;">Tambah akun, ubah peran, dan hapus
+          akun yang dapat masuk ke SIBATA.</p>
+      </div>
+
+      <div id="am-alert" class="account-alert" role="status" aria-live="polite" hidden></div>
+
+      <section class="admin-data-manager-section am-section" aria-label="Daftar akun">
+        <div class="manager-header-bar">
+          <div class="manager-title-group">
+            <h2>Daftar Akun</h2>
+            <p>Hanya akun dengan peran admin yang dapat membuka halaman ini.</p>
+          </div>
+
+          <div class="manager-actions-row">
+            <div class="search-input-wrapper">
+              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="am-search" placeholder="Cari username atau nama..." autocomplete="off"
+                aria-label="Cari akun">
+            </div>
+            <button type="button" id="am-refresh" class="btn-action-tool" title="Segarkan data dari server">Refresh</button>
+            <button type="button" id="am-add" class="btn-primary" style="padding: 10px 22px;">Tambah akun</button>
+          </div>
+        </div>
+
+        <div id="am-batch-banner" class="batch-delete-banner" style="display: none;">
+          <div class="batch-delete-info">
+            <span class="batch-badge-counter" id="am-selected-count">0</span>
+            <span>akun dipilih</span>
+          </div>
+          <div class="batch-banner-actions">
+            <button type="button" id="am-clear-selection" class="btn-batch-action btn-batch-action-cancel">Batal pilih</button>
+            <button type="button" id="am-delete-selected" class="btn-batch-action btn-batch-action-delete">Hapus terpilih</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="am-col-check"><input type="checkbox" id="am-check-all" class="table-checkbox"
+                    aria-label="Pilih semua akun di halaman ini"></th>
+                <th>Pengguna</th>
+                <th>Peran</th>
+                <th style="text-align: center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="am-table-body">
+              <tr><td colspan="4" class="table-empty">Memuat data akun...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="account-pager">
+          <span id="am-count" class="data-count-text">-</span>
+          <div class="account-pager-buttons">
+            <button type="button" id="am-prev" class="btn-pill-small btn-pill-outline">Sebelumnya</button>
+            <span id="am-page-label" class="account-pager-label">Halaman 1</span>
+            <button type="button" id="am-next" class="btn-pill-small btn-pill-outline">Berikutnya</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal Tambah / Ubah Akun -->
+  <div id="am-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="am-modal-title">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-card-header">
+        <div>
+          <h2 id="am-modal-title">Tambah akun</h2>
+          <span class="modal-card-sub" id="am-modal-sub">Buat akun baru dan tentukan perannya.</span>
+        </div>
+        <button type="button" id="am-modal-close" class="modal-close" aria-label="Tutup">&times;</button>
+      </div>
+
+      <form id="am-form" class="modal-card-body" novalidate>
+        <input type="hidden" id="am-id">
+        <div id="am-form-alert" class="account-alert danger" role="alert" hidden></div>
+
+        <div class="form-group">
+          <label for="am-username">Username <span class="required">*</span></label>
+          <input type="text" id="am-username" placeholder="3-32 karakter: huruf, angka, . _ -" autocomplete="off"
+            maxlength="32">
+        </div>
+
+        <div class="form-group">
+          <label for="am-display-name">Nama tampilan</label>
+          <input type="text" id="am-display-name" placeholder="Contoh: Joko (Staf Tata Ruang)" maxlength="80"
+            autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <div class="label-with-action">
+            <label for="am-password">Kata sandi <span class="required" id="am-password-required">*</span></label>
+            <button type="button" id="am-toggle-password" class="btn-link">Lihat</button>
+          </div>
+          <input type="password" id="am-password" placeholder="Minimal 8 karakter" autocomplete="new-password">
+          <span class="form-help" id="am-password-help"></span>
+        </div>
+
+        <fieldset class="role-fieldset">
+          <legend>Peran <span class="required">*</span></legend>
+          <div id="am-role-options" class="role-options"></div>
+        </fieldset>
+
+        <div class="am-form-actions">
+          <button type="button" id="am-cancel" class="btn-pill-small btn-pill-outline">Batal</button>
+          <button type="submit" id="am-submit" class="btn-primary" style="padding: 10px 24px;">Simpan akun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  
+  
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>Kelompok 10</h4>
+        <p>Luas dan Jumlah sawah di Jawa Barat yang tersedia untuk Dijadikan Data Center AI.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Navigasi Footer">
+        <a href="index.html">Beranda</a>
+        <a href="index.html#tentang-kami">Tentang Kami</a>
+        <a href="index.html#analisis-lahan">Katalog</a>
+        <a href="login.html">Login Admin</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+    </div>
+  </footer>
+
+  <script type="module" src="./js/account_manager.js"></script>
+</body>
+
+</html>

@@ -1325,7 +1325,9 @@ footer.site-footer {
   font-size: 0.9375rem;
   font-weight: 600;
 }
-
+nav a, nav li {
+    white-space: nowrap;
+}
 .footer-nav a:hover {
   color: var(--accent-gold);
 }

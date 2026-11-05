@@ -17,6 +17,7 @@ export function setDbStatus(status) {
 }
 
 export const Role = Object.freeze({
+  MANAGER: "manager",
   ADMIN: "admin",
   VIEWER: "viewer"
 });

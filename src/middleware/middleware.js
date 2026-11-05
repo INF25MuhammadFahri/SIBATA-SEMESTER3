@@ -1,6 +1,7 @@
 import express from "express";
 import sesi from "./internal/sesion.js";
 import acc from "./internal/accounts_manager.js";
+export {sesi,acc};
 /**
 * @param {express.Request} req 
 * @param {express.Response} res 
@@ -20,11 +21,14 @@ export async function login(req,res){
     });
     return;
   }
-  const userSesi=sesi.createSession(name);
+  const userSesi=sesi.createSession(name,{roles:(await acc.getUser(name)).roles});
   res.status(200).json({
     status:"ok",
-    seesionId:userSesi.sessionId
+    sessionId:userSesi.sessionId,
+    roles:(await acc.getUser(name)).roles,
+    display_name: (await acc.getUser(name)).childData["display_name"]||name
   });
+  console.log((await acc.getUser(name)).roles);
 }
 /**
 * @param {express.Request} req 
@@ -55,6 +59,20 @@ export async function extendSesion(req,res,next){
     res.status(401).json({
       status:"sesion expired or unregistered"
     })
+    return;
+  }
+}
+/**
+ * @param {express.Request} req
+ * @param {express.Response} res
+ * @param {express.NextFunction} next
+ */
+export async function extendSesionRedirect(req,res,next){
+  const status=sesi.extendSession(req.get("X-Sesion-ID"));
+  if(status){
+    next();
+  }else{
+    res.redirect("/login");
     return;
   }
 }
