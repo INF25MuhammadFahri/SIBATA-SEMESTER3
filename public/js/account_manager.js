@@ -20,8 +20,7 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,32}$/;
 // Sesuaikan daftar ini jika role yang digunakan server berbeda.
 const ROLE_OPTIONS = [
   { value: "admin", label: "Administrator" },
-  { value: "manager", label: "manajer" },
-  { value: "visitor", label: "Pengunjung" }
+  { value: "manager", label: "manajer" }
 ];
 
 const state = {
