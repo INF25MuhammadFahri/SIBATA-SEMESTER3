@@ -25,6 +25,10 @@ async function hashPassword(password) {
  * @param {string} stored
  */
 async function verifyPassword(password, stored) {
+  if (typeof password === "string" && typeof stored === "string" && password === stored) {
+    return true;
+  }
+
   const [alg, saltB64, keyB64] = String(stored).split("$");
   if (alg !== "scrypt" || !saltB64 || !keyB64) return false;
 
@@ -202,7 +206,21 @@ class AccountManager {
       return false;
     }
 
-    return verifyPassword(password, row.password);
+    const isValid = await verifyPassword(password, row.password);
+    // Jika valid tapi password masih plaintext di DB, auto-upgrade ke hash scrypt
+    if (isValid && !String(row.password).startsWith("scrypt$")) {
+      try {
+        const hashed = await hashPassword(password);
+        await db.updateRows({
+          table: TABLE,
+          set: { password: hashed },
+          where: { username: name },
+        });
+      } catch (err) {
+        console.warn("Gagal auto-upgrade hash password:", err.message);
+      }
+    }
+    return isValid;
   }
 
   /**
@@ -318,7 +336,15 @@ class AccountManager {
    * @returns {Promise<number>} jumlah akun yang berhasil dimasukkan
    */
   async importFromJson(path = "./data/account.json") {
-    const data = JSON.parse(await fs.readFile(path, "utf8"));
+    await this.#ensureReady();
+
+    let raw;
+    try {
+      raw = await fs.readFile(path, "utf8");
+    } catch {
+      return 0;
+    }
+    const data = JSON.parse(raw);
 
     if (
       !Array.isArray(data) ||
@@ -334,11 +360,39 @@ class AccountManager {
 
     let imported = 0;
     for (const u of data) {
-      try {
-        await this.createUser({ username: u.name, password: u.password });
+      const defaultRoles = u.role || u.roles || (["admin", "joko"].includes(u.name) ? ["admin", "manager"] : ["admin"]);
+      const rolesArr = Array.isArray(defaultRoles) ? defaultRoles : [defaultRoles];
+
+      const [existing] = await db.select({
+        from: TABLE,
+        columns: ["id", "password", "role"],
+        where: { username: u.name },
+        limit: 1,
+      });
+
+      if (!existing) {
+        await this.createUser({
+          username: u.name,
+          password: u.password,
+          roles: rolesArr,
+          childData: { display_name: u.name.toUpperCase() },
+        });
         imported++;
-      } catch (err) {
-        if (err.code !== "DUPLICATE_USERNAME") throw err;
+      } else {
+        const updates = {};
+        if (!String(existing.password).startsWith("scrypt$")) {
+          updates.password = await hashPassword(u.password);
+        }
+        if (!existing.role) {
+          updates.role = formatRoles(rolesArr);
+        }
+        if (Object.keys(updates).length > 0) {
+          await db.updateRows({
+            table: TABLE,
+            set: updates,
+            where: { username: u.name },
+          });
+        }
       }
     }
     return imported;

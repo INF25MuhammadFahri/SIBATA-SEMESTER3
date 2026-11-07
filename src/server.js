@@ -87,6 +87,11 @@ app.get("/api/databaseStatus",route.getDbStatus);
 app.use("/api/accounts",route.akun_manager.router);
 // Inisialisasi API & Database (tunggu hingga siap sebelum mendengarkan request)
 await api.init();
+try {
+    await midle.acc.importFromJson();
+} catch (e) {
+    console.warn("Gagal sinkron akun default:", e.message);
+}
 
 app.get("/api/health", (req, res) => {
     res.json({
