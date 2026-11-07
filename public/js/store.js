@@ -356,15 +356,315 @@ export async function postServerPemilik(pemilikObj) {
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     });
-    const result = await res.json();
+    const result = await res.json().catch(() => ({}));
     return {
       ok: res.ok,
-      status: res.status,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
       ...result
     };
   } catch (err) {
     console.warn("postServerPemilik offline/error:", err);
-    return { ok: false, status: 0, is_err: true, error: err.message };
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Memperbarui data pemilik di server melalui PUT /api/pemilik
+ */
+export async function putServerPemilik(pemilikObj) {
+  const payload = Array.isArray(pemilikObj) ? pemilikObj[0] : pemilikObj;
+  try {
+    const res = await fetch("/api/pemilik", {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("putServerPemilik error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Menghapus data pemilik di server melalui DELETE /api/pemilik
+ */
+export async function deleteServerPemilik(ids) {
+  const idArray = Array.isArray(ids) ? ids : [ids];
+  const payload = idArray.map(item =>
+    typeof item === "object" && item !== null ? String(item.id) : String(item)
+  );
+  try {
+    const res = await fetch("/api/pemilik", {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("deleteServerPemilik error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Menambahkan data wilayah baru melalui POST /api/wilayah
+ */
+export async function postServerWilayah(wilayahObj) {
+  const payload = Array.isArray(wilayahObj) ? wilayahObj[0] : wilayahObj;
+  try {
+    const res = await fetch("/api/wilayah", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("postServerWilayah error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Memperbarui data wilayah melalui PUT /api/wilayah
+ */
+export async function putServerWilayah(wilayahObj) {
+  const payload = Array.isArray(wilayahObj) ? wilayahObj[0] : wilayahObj;
+  try {
+    const res = await fetch("/api/wilayah", {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("putServerWilayah error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Menghapus data wilayah melalui DELETE /api/wilayah
+ */
+export async function deleteServerWilayah(ids) {
+  const idArray = Array.isArray(ids) ? ids : [ids];
+  const payload = idArray.map(item =>
+    typeof item === "object" && item !== null ? String(item.id) : String(item)
+  );
+  try {
+    const res = await fetch("/api/wilayah", {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("deleteServerWilayah error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Menambahkan data status lahan melalui POST /api/status_lahan
+ */
+export async function postServerStatusLahan(statusObj) {
+  const payload = Array.isArray(statusObj) ? statusObj[0] : statusObj;
+  try {
+    const res = await fetch("/api/status_lahan", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("postServerStatusLahan error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Memperbarui data status lahan melalui PUT /api/status_lahan
+ */
+export async function putServerStatusLahan(statusObj) {
+  const payload = Array.isArray(statusObj) ? statusObj[0] : statusObj;
+  try {
+    const res = await fetch("/api/status_lahan", {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("putServerStatusLahan error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Menghapus data status lahan melalui DELETE /api/status_lahan
+ */
+export async function deleteServerStatusLahan(ids) {
+  const idArray = Array.isArray(ids) ? ids : [ids];
+  const payload = idArray.map(item =>
+    typeof item === "object" && item !== null ? String(item.id) : String(item)
+  );
+  try {
+    const res = await fetch("/api/status_lahan", {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("deleteServerStatusLahan error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Mengambil data jenis pengairan dari GET /api/jenis_pengairan
+ */
+export async function fetchServerJenisPengairan(params = {}) {
+  const qs = buildQueryString(params);
+  try {
+    const res = await fetch(`/api/jenis_pengairan${qs}`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json && Array.isArray(json.data) && json.data.length > 0) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.warn("fetchServerJenisPengairan error:", err);
+  }
+  return [
+    { id: "JP-01", nama: "Tadah Hujan", deskripsi: "Mengandalkan curah hujan musiman" },
+    { id: "JP-02", nama: "Setengah Teknis", deskripsi: "Saluran irigasi semi-permanen" },
+    { id: "JP-03", nama: "Irigasi Teknis", deskripsi: "Jaringan irigasi permanen teratur" }
+  ];
+}
+
+/**
+ * Menambahkan data jenis pengairan melalui POST /api/jenis_pengairan
+ */
+export async function postServerJenisPengairan(jpObj) {
+  const payload = Array.isArray(jpObj) ? jpObj[0] : jpObj;
+  try {
+    const res = await fetch("/api/jenis_pengairan", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("postServerJenisPengairan error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Memperbarui data jenis pengairan melalui PUT /api/jenis_pengairan
+ */
+export async function putServerJenisPengairan(jpObj) {
+  const payload = Array.isArray(jpObj) ? jpObj[0] : jpObj;
+  try {
+    const res = await fetch("/api/jenis_pengairan", {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("putServerJenisPengairan error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
+  }
+}
+
+/**
+ * Menghapus data jenis pengairan melalui DELETE /api/jenis_pengairan
+ */
+export async function deleteServerJenisPengairan(ids) {
+  const idArray = Array.isArray(ids) ? ids : [ids];
+  const payload = idArray.map(item =>
+    typeof item === "object" && item !== null ? String(item.id) : String(item)
+  );
+  try {
+    const res = await fetch("/api/jenis_pengairan", {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      httpStatus: res.status,
+      message: typeof result.status === "string" ? result.status : (result.message || ""),
+      ...result
+    };
+  } catch (err) {
+    console.warn("deleteServerJenisPengairan error:", err);
+    return { ok: false, httpStatus: 0, status: 0, is_err: true, error: err.message, message: err.message };
   }
 }
 

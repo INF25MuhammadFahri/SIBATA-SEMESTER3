@@ -9,7 +9,7 @@ import { createSuccsesReturn, createFailedReturn } from "./common_type.js";
 const TABLE = "wilayah";
 
 /** Kolom yang dicari saat parameter `search` diisi (OR antar kolom). */
-const SEARCH_COLUMNS = ["nama"];
+const SEARCH_COLUMNS = ["kecamatan", "desa"];
 
 
 
@@ -38,6 +38,22 @@ async function idExists(id) {
 }
 
 
+
+function normalizeWilayahPayload(item) {
+    if (!item || typeof item !== "object") return null;
+    const { id, luas_baku_sawah, ...rest } = item;
+    const clean = { ...rest };
+    if (luas_baku_sawah !== undefined && clean.total_lahan_baku_ha === undefined) {
+        clean.total_lahan_baku_ha = Number(luas_baku_sawah) || 0;
+    }
+    if (clean.total_lahan_baku_ha !== undefined) {
+        clean.total_lahan_baku_ha = Number(clean.total_lahan_baku_ha) || 0;
+    }
+    if (!clean.kabupaten_kota_id) {
+        clean.kabupaten_kota_id = "KAB-01";
+    }
+    return { id, payload: clean };
+}
 
 /* ------------------------------------------------------------------ */
 /* GET                                                                 */
@@ -79,7 +95,11 @@ export async function getWilayah(page, size, search) {
             offset: hasSize ? pageIndex * pageSize : undefined
         });
 
-        return createSuccsesReturn(rows.map(r => ({ ...r, id: String(r.id) })));
+        return createSuccsesReturn(rows.map(r => ({
+            ...r,
+            id: String(r.id),
+            luas_baku_sawah: r.total_lahan_baku_ha != null ? Number(r.total_lahan_baku_ha) : 0
+        })));
     } catch (err) {
         return createFailedReturn(err.message);
     }
@@ -88,6 +108,24 @@ export async function getWilayah(page, size, search) {
 /* ------------------------------------------------------------------ */
 /* POST                                                                */
 /* ------------------------------------------------------------------ */
+
+async function generateNextId() {
+    const rows = await db.select({
+        from: TABLE,
+        columns: ["id"]
+    });
+    let max = 0;
+    for (const row of rows) {
+        const idStr = String(row.id || "");
+        if (idStr.startsWith("WIL-")) {
+            const num = parseInt(idStr.replace("WIL-", ""), 10);
+            if (!Number.isNaN(num) && num > max) {
+                max = num;
+            }
+        }
+    }
+    return `WIL-${String(max + 1).padStart(2, "0")}`;
+}
 
 /**
  * Tambah data baru.
@@ -106,18 +144,21 @@ export async function postWilayah(data) {
         const conflicts = [];
 
         for (const item of [].concat(data ?? [])) {
-            if (!item || typeof item !== "object") continue;
+            const normalized = normalizeWilayahPayload(item);
+            if (!normalized) continue;
 
-            const { id, ...rest } = item;
+            const { id, payload } = normalized;
 
             if (hasId(id)) {
-                if (await idExists(id)) {
-                    conflicts.push(String(id));
+                const idStr = String(id).trim();
+                if (await idExists(idStr)) {
+                    conflicts.push(idStr);
                     continue;
                 }
-                await db.insert(TABLE, { id, ...rest });
+                await db.insert(TABLE, { id: idStr, ...payload });
             } else {
-                await db.insert(TABLE, rest);
+                const newId = await generateNextId();
+                await db.insert(TABLE, { id: newId, ...payload });
             }
         }
 
@@ -149,21 +190,23 @@ export async function putWilayah(data) {
         const missing = [];
 
         for (const item of [].concat(data ?? [])) {
-            if (!item || typeof item !== "object" || !hasId(item.id)) continue;
+            const normalized = normalizeWilayahPayload(item);
+            if (!normalized || !hasId(normalized.id)) continue;
 
-            const { id, ...rest } = item;
+            const { id, payload } = normalized;
+            const idStr = String(id).trim();
 
-            if (!(await idExists(id))) {
-                missing.push(String(id));
+            if (!(await idExists(idStr))) {
+                missing.push(idStr);
                 continue;
             }
 
             const set = Object.fromEntries(
-                Object.entries(rest).filter(([, v]) => v !== undefined)
+                Object.entries(payload).filter(([, v]) => v !== undefined)
             );
             if (Object.keys(set).length === 0) continue;
 
-            await db.updateRows({ table: TABLE, set, where: { id } });
+            await db.updateRows({ table: TABLE, set, where: { id: idStr } });
         }
 
         return createSuccsesReturn(missing);
@@ -200,6 +243,14 @@ export async function delWilayah(ids) {
 
         const found = new Set(rows.map(r => String(r.id)));
         const missingId = wanted.filter(id => !found.has(id));
+        const toDelete = wanted.filter(id => found.has(id));
+
+        if (toDelete.length > 0) {
+            await db.deleteRows({
+                from: TABLE,
+                where: { id: toDelete }
+            });
+        }
 
         return createSuccsesReturn(missingId);
     } catch (err) {

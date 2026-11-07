@@ -138,7 +138,6 @@ async function checkSchema(connection, sql) {
 
       if (
         status === "HILANG" ||
-        status === "PERIKSA TIPE" ||
         status === "TIDAK ADA"
       ) {
         errors.push({

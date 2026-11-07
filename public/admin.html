@@ -125,7 +125,7 @@
                 <div class="form-group">
                   <div class="label-with-action">
                     <label for="select-pemilik">Pemilik Lahan (Foreign Key) <span class="required">*</span></label>
-                    <button type="button" id="btn-open-pemilik-modal" class="btn-link">+ Tambah Baru</button>
+                    <button type="button" id="btn-open-pemilik-modal" class="btn-link">+ Kelola Pemilik</button>
                   </div>
                   <select id="select-pemilik" required>
                     <option value="">-- Pilih Pemilik Terdaftar --</option>
@@ -134,8 +134,11 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="select-wilayah">Wilayah Administratif (Foreign Key) <span
-                      class="required">*</span></label>
+                  <div class="label-with-action">
+                    <label for="select-wilayah">Wilayah Administratif (Foreign Key) <span
+                        class="required">*</span></label>
+                    <button type="button" id="btn-open-wilayah-modal" class="btn-link">+ Kelola Wilayah</button>
+                  </div>
                   <select id="select-wilayah" required>
                     <option value="">-- Pilih Desa / Kecamatan --</option>
                   </select>
@@ -145,17 +148,21 @@
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="select-jenis-sawah">Jenis Pengairan Sawah <span class="required">*</span></label>
+                  <div class="label-with-action">
+                    <label for="select-jenis-sawah">Jenis Pengairan Sawah <span class="required">*</span></label>
+                    <button type="button" id="btn-open-pengairan-modal" class="btn-link">+ Kelola Pengairan</button>
+                  </div>
                   <select id="select-jenis-sawah" required>
-                    <option value="Tadah Hujan">Tadah Hujan</option>
-                    <option value="Setengah Teknis">Setengah Teknis</option>
-                    <option value="Irigasi Teknis">Irigasi Teknis</option>
+                    <!-- Diisi dinamis dari master jenis_pengairan -->
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label for="select-status-hukum">Status Hukum Lahan (Foreign Key) <span
-                      class="required">*</span></label>
+                  <div class="label-with-action">
+                    <label for="select-status-hukum">Status Hukum Lahan (Foreign Key) <span
+                        class="required">*</span></label>
+                    <button type="button" id="btn-open-status-modal" class="btn-link">+ Kelola Status</button>
+                  </div>
                   <select id="select-status-hukum" required>
                     <!-- Diisi dinamis -->
                   </select>
@@ -206,14 +213,53 @@
               </ul>
             </div>
 
-            <div class="admin-card">
-              <div class="admin-card-header" style="margin-bottom: 14px; padding-bottom: 10px;">
-                <h2>Pintasan Entitas Pemilik</h2>
+            <div class="admin-card master-quick-access-card">
+              <div class="admin-card-header" style="margin-bottom: 16px; padding-bottom: 12px;">
+                <h2>Master Data &amp; Relasi</h2>
+                <p>Kelola data referensi kunci asing (Foreign Key):</p>
               </div>
-              <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">Jika petani pengelola belum
-                terdaftar di sistem:</p>
-              <button type="button" id="btn-open-pemilik-modal-side" class="btn-secondary full-width">+ Tambah Pemilik /
-                Kelompok Tani</button>
+              <div class="master-quick-links">
+                <button type="button" id="btn-open-pemilik-side" class="btn-master-card">
+                  <span class="btn-master-card-left">
+                    <span class="btn-master-icon">👤</span>
+                    <span class="btn-master-text">
+                      <strong>Pemilik Lahan</strong>
+                      <small>Tabel relasi master <code>pemilik</code></small>
+                    </span>
+                  </span>
+                  <span class="btn-master-arrow">&rarr;</span>
+                </button>
+                <button type="button" id="btn-open-wilayah-side" class="btn-master-card">
+                  <span class="btn-master-card-left">
+                    <span class="btn-master-icon">📍</span>
+                    <span class="btn-master-text">
+                      <strong>Wilayah Administratif</strong>
+                      <small>Tabel relasi master <code>wilayah</code></small>
+                    </span>
+                  </span>
+                  <span class="btn-master-arrow">&rarr;</span>
+                </button>
+                <button type="button" id="btn-open-status-side" class="btn-master-card">
+                  <span class="btn-master-card-left">
+                    <span class="btn-master-icon">⚖️</span>
+                    <span class="btn-master-text">
+                      <strong>Status Hukum Lahan</strong>
+                      <small>Tabel relasi master <code>status_lahan</code></small>
+                    </span>
+                  </span>
+                  <span class="btn-master-arrow">&rarr;</span>
+                </button>
+                <button type="button" id="btn-open-pengairan-side" class="btn-master-card">
+                  <span class="btn-master-card-left">
+                    <span class="btn-master-icon">💧</span>
+                    <span class="btn-master-text">
+                      <strong>Jenis Pengairan</strong>
+                      <small>Tabel referensi <code>jenis_pengairan</code></small>
+                    </span>
+                  </span>
+                  <span class="btn-master-arrow">&rarr;</span>
+                </button>
+              </div>
             </div>
           </aside>
         </div>
@@ -325,7 +371,8 @@
         </section>
       </div>
 
-      <!-- 4. TABEL PENGELOLAAN & CRUD DATA SAWAH LENGKAP -->
+
+            <!-- 4. TABEL PENGELOLAAN & CRUD DATA SAWAH LENGKAP -->
       <section class="admin-data-manager-section" aria-label="Manajemen Data Sawah">
         <div class="manager-header-bar">
           <div class="manager-title-group">
@@ -437,8 +484,12 @@
           <h2 id="edit-sawah-title">Perbarui Data Petak Sawah</h2>
           <span class="modal-card-sub">Operasi <code>PUT /api/data_sawah</code> (Update Data)</span>
         </div>
-        <button type="button" id="edit-sawah-close-btn" class="modal-close"
-          aria-label="Tutup modal edit">&times;</button>
+        <button type="button" id="edit-sawah-close-btn" class="modal-close" aria-label="Tutup modal edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
       <form id="form-edit-sawah" class="modal-card-body">
@@ -500,39 +551,515 @@
     </div>
   </div>
 
-  <!-- MODAL TAMBAH PEMILIK BARU (INSERT INTO pemilik) -->
-  <div id="pemilik-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="pemilik-modal-title">
-    <div class="modal-card" style="max-width: 480px;">
-      <div class="modal-card-header">
-        <div>
-          <h2 id="pemilik-modal-title">Tambah Pemilik Baru</h2>
-          <span class="modal-card-sub">Operasi <code>POST /api/pemilik</code></span>
+  <!-- ======================================================= -->
+  <!-- 1. MODAL CRUD PEMILIK LAHAN                             -->
+  <!-- ======================================================= -->
+  <div id="modal-crud-pemilik" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="crud-pemilik-title">
+    <div class="crud-modal-card">
+      <!-- Modal Header -->
+      <div class="crud-modal-header">
+        <div class="crud-header-brand">
+          <div class="crud-header-icon-box">
+            <span>👤</span>
+          </div>
+          <div>
+            <h2 id="crud-pemilik-title">Kelola Master Pemilik Lahan</h2>
+            <div class="crud-header-tags">
+              <span class="crud-api-badge"><code>/api/pemilik</code></span>
+              <span class="crud-type-badge">Kunci Asing Relasi (Foreign Key)</span>
+            </div>
+          </div>
         </div>
-        <button type="button" id="pemilik-modal-close-btn" class="modal-close" aria-label="Tutup modal">&times;</button>
+        <button type="button" id="btn-close-crud-pemilik" class="modal-close" aria-label="Tutup modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
-      <form id="form-add-pemilik" class="modal-card-body">
-        <div class="form-group">
-          <label for="input-pemilik-nama">Nama Petani / Kelompok Tani <span class="required">*</span></label>
-          <input type="text" id="input-pemilik-nama" placeholder="Contoh: Kelompok Tani Harapan Jaya" required>
-        </div>
 
-        <div class="form-group">
-          <label for="select-pemilik-jenis">Jenis Kepemilikan <span class="required">*</span></label>
-          <select id="select-pemilik-jenis" required>
-            <option value="Perorangan">Perorangan</option>
-            <option value="Kelompok Tani">Kelompok Tani</option>
-          </select>
-        </div>
+      <!-- Modal Body Split Layout -->
+      <div class="crud-modal-body">
+        <div class="crud-split-layout">
+          <!-- KARTU KIRI: FORMULIR -->
+          <div class="crud-form-card">
+            <div class="crud-form-topbar">
+              <div class="crud-form-title-group">
+                <span class="crud-mode-indicator" id="crud-pemilik-mode-badge">Mode Tambah</span>
+                <h3 id="crud-pemilik-form-title">Pendaftaran Pemilik Baru</h3>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label for="input-pemilik-kontak">Nomor Kontak / Telepon <span class="required">*</span></label>
-          <input type="text" id="input-pemilik-kontak" placeholder="Contoh: 081298765432" required>
-        </div>
+            <div id="crud-pemilik-alert" class="crud-alert error"></div>
 
-        <div style="margin-top: 10px;">
-          <button type="submit" class="btn-primary full-width">Simpan Pemilik ke Database</button>
+            <form id="form-crud-pemilik" class="crud-form-inner" autocomplete="off">
+              <input type="hidden" id="crud-pemilik-edit-id">
+
+              <div class="form-group">
+                <label for="crud-pemilik-nama">Nama Pemilik / Kelompok Tani <span class="required">*</span></label>
+                <input type="text" id="crud-pemilik-nama" placeholder="Contoh: H. Suherman / Poktan Maju" required>
+                <span class="form-help">Nama perorangan petani atau asosiasi kelompok tani</span>
+              </div>
+
+              <div class="form-group">
+                <label for="crud-pemilik-jenis">Jenis Kepemilikan Lahan <span class="required">*</span></label>
+                <select id="crud-pemilik-jenis" required>
+                  <option value="Perorangan">Perorangan (Petani Pribadi)</option>
+                  <option value="Kelompok Tani">Kelompok Tani (Gapoktan)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="crud-pemilik-kontak">Nomor Kontak / Telepon</label>
+                <input type="text" id="crud-pemilik-kontak" placeholder="Contoh: 0812-3456-7890">
+                <span class="form-help">Dapat dihubungi untuk konfirmasi legalitas lahan</span>
+              </div>
+
+              <div class="crud-form-actions">
+                <button type="button" id="btn-crud-pemilik-reset" class="btn-crud-form btn-crud-reset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                  Reset
+                </button>
+                <button type="submit" id="btn-crud-pemilik-submit" class="btn-crud-form btn-crud-submit">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Simpan Pemilik
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- KARTU KANAN: TABEL DAFTAR DATA -->
+          <div class="crud-table-card">
+            <div class="crud-table-topbar">
+              <div class="crud-table-title-wrap">
+                <h3>Daftar Pemilik Terdaftar</h3>
+                <span class="crud-count-badge" id="crud-pemilik-count-wrapper">
+                  <strong id="crud-pemilik-count">0</strong> Data
+                </span>
+              </div>
+              <div class="crud-table-controls">
+                <div class="crud-search-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" id="crud-pemilik-search" placeholder="Cari pemilik / kontak...">
+                </div>
+                <button type="button" id="btn-crud-pemilik-refresh" class="btn-crud-refresh" title="Segarkan Data">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                  Segarkan
+                </button>
+              </div>
+            </div>
+
+            <div class="crud-table-wrapper">
+              <div id="crud-pemilik-loading" class="crud-loading-msg">
+                <div class="crud-spinner"></div>
+                <span>Memuat data pemilik dari basis data...</span>
+              </div>
+              <div class="crud-table-scroll">
+                <table class="crud-table" id="crud-pemilik-table" style="display:none;">
+                  <thead>
+                    <tr>
+                      <th style="width: 90px;">ID</th>
+                      <th>Nama Pemilik</th>
+                      <th style="width: 140px;">Jenis</th>
+                      <th style="width: 150px;">Kontak</th>
+                      <th style="text-align:center; width: 150px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="crud-pemilik-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- 2. MODAL CRUD WILAYAH ADMINISTRATIF                     -->
+  <!-- ======================================================= -->
+  <div id="modal-crud-wilayah" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="crud-wilayah-title">
+    <div class="crud-modal-card">
+      <div class="crud-modal-header">
+        <div class="crud-header-brand">
+          <div class="crud-header-icon-box">
+            <span>📍</span>
+          </div>
+          <div>
+            <h2 id="crud-wilayah-title">Kelola Wilayah Administratif</h2>
+            <div class="crud-header-tags">
+              <span class="crud-api-badge"><code>/api/wilayah</code></span>
+              <span class="crud-type-badge">Hierarki Wilayah &amp; Risiko Bencana</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="btn-close-crud-wilayah" class="modal-close" aria-label="Tutup modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="crud-modal-body">
+        <div class="crud-split-layout">
+          <!-- KARTU KIRI: FORMULIR -->
+          <div class="crud-form-card">
+            <div class="crud-form-topbar">
+              <div class="crud-form-title-group">
+                <span class="crud-mode-indicator" id="crud-wilayah-mode-badge">Mode Tambah</span>
+                <h3 id="crud-wilayah-form-title">Pendaftaran Wilayah Baru</h3>
+              </div>
+            </div>
+
+            <div id="crud-wilayah-alert" class="crud-alert error"></div>
+
+            <form id="form-crud-wilayah" class="crud-form-inner" autocomplete="off">
+              <input type="hidden" id="crud-wilayah-edit-id">
+
+              <div class="form-group">
+                <label for="crud-wilayah-kabupaten">Kabupaten / Kota <span class="required">*</span></label>
+                <select id="crud-wilayah-kabupaten" required></select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="crud-wilayah-kecamatan">Kecamatan <span class="required">*</span></label>
+                  <input type="text" id="crud-wilayah-kecamatan" placeholder="Contoh: Cianjur" required>
+                </div>
+                <div class="form-group">
+                  <label for="crud-wilayah-desa">Desa / Kelurahan <span class="required">*</span></label>
+                  <input type="text" id="crud-wilayah-desa" placeholder="Contoh: Sukamaju" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="crud-wilayah-luas">Luas Baku Sawah Wilayah (Hektar)</label>
+                <input type="number" id="crud-wilayah-luas" step="0.1" min="0" placeholder="Contoh: 1250.5">
+              </div>
+
+              <!-- Profil Risiko Bencana 3 Kolom Simetris -->
+              <div class="form-group">
+                <label style="margin-bottom: 4px;">Tingkat Kerentanan Risiko Bencana</label>
+                <div class="risk-factors-grid">
+                  <div class="risk-factor-item">
+                    <span class="risk-label">Banjir</span>
+                    <select id="crud-wilayah-banjir">
+                      <option value="Rendah">Rendah</option>
+                      <option value="Sedang">Sedang</option>
+                      <option value="Tinggi">Tinggi</option>
+                    </select>
+                  </div>
+                  <div class="risk-factor-item">
+                    <span class="risk-label">Gempa</span>
+                    <select id="crud-wilayah-gempa">
+                      <option value="Rendah">Rendah</option>
+                      <option value="Sedang">Sedang</option>
+                      <option value="Tinggi">Tinggi</option>
+                    </select>
+                  </div>
+                  <div class="risk-factor-item">
+                    <span class="risk-label">Longsor</span>
+                    <select id="crud-wilayah-longsor">
+                      <option value="Rendah">Rendah</option>
+                      <option value="Sedang">Sedang</option>
+                      <option value="Tinggi">Tinggi</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="crud-form-actions">
+                <button type="button" id="btn-crud-wilayah-reset" class="btn-crud-form btn-crud-reset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                  Reset
+                </button>
+                <button type="submit" id="btn-crud-wilayah-submit" class="btn-crud-form btn-crud-submit">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Simpan Wilayah
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- KARTU KANAN: TABEL DAFTAR DATA -->
+          <div class="crud-table-card">
+            <div class="crud-table-topbar">
+              <div class="crud-table-title-wrap">
+                <h3>Daftar Wilayah Administratif</h3>
+                <span class="crud-count-badge" id="crud-wilayah-count-wrapper">
+                  <strong id="crud-wilayah-count">0</strong> Data
+                </span>
+              </div>
+              <div class="crud-table-controls">
+                <div class="crud-search-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" id="crud-wilayah-search" placeholder="Cari desa / kecamatan...">
+                </div>
+                <button type="button" id="btn-crud-wilayah-refresh" class="btn-crud-refresh" title="Segarkan Data">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                  Segarkan
+                </button>
+              </div>
+            </div>
+
+            <div class="crud-table-wrapper">
+              <div id="crud-wilayah-loading" class="crud-loading-msg">
+                <div class="crud-spinner"></div>
+                <span>Memuat data wilayah...</span>
+              </div>
+              <div class="crud-table-scroll">
+                <table class="crud-table" id="crud-wilayah-table" style="display:none;">
+                  <thead>
+                    <tr>
+                      <th style="width: 90px;">ID</th>
+                      <th>Desa / Kelurahan</th>
+                      <th>Kecamatan</th>
+                      <th>Kabupaten / Kota</th>
+                      <th style="text-align:center; width: 150px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="crud-wilayah-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- 3. MODAL CRUD STATUS HUKUM LAHAN                       -->
+  <!-- ======================================================= -->
+  <div id="modal-crud-status" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="crud-status-title">
+    <div class="crud-modal-card">
+      <div class="crud-modal-header">
+        <div class="crud-header-brand">
+          <div class="crud-header-icon-box">
+            <span>⚖️</span>
+          </div>
+          <div>
+            <h2 id="crud-status-title">Kelola Status Hukum Lahan</h2>
+            <div class="crud-header-tags">
+              <span class="crud-api-badge"><code>/api/status_lahan</code></span>
+              <span class="crud-type-badge">Perlindungan LP2B &amp; Regulasi Tata Ruang</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="btn-close-crud-status" class="modal-close" aria-label="Tutup modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="crud-modal-body">
+        <div class="crud-split-layout">
+          <!-- KARTU KIRI: FORMULIR -->
+          <div class="crud-form-card">
+            <div class="crud-form-topbar">
+              <div class="crud-form-title-group">
+                <span class="crud-mode-indicator" id="crud-status-mode-badge">Mode Tambah</span>
+                <h3 id="crud-status-form-title">Pendaftaran Status Baru</h3>
+              </div>
+            </div>
+
+            <div id="crud-status-alert" class="crud-alert error"></div>
+
+            <form id="form-crud-status" class="crud-form-inner" autocomplete="off">
+              <input type="hidden" id="crud-status-edit-id">
+
+              <div class="form-group">
+                <label for="crud-status-kategori">Kategori Status Lahan <span class="required">*</span></label>
+                <input type="text" id="crud-status-kategori" placeholder="Contoh: Tanah Kas Desa, LP2B, HGU" required>
+                <span class="form-help">Status kepemilikan yuridis atau hak guna tanah</span>
+              </div>
+
+              <div class="form-group">
+                <label for="crud-status-alih">Legalitas Izin Alih Fungsi Non-Pertanian <span class="required">*</span></label>
+                <select id="crud-status-alih">
+                  <option value="1">Boleh Dialihfungsikan (Non-LP2B / Diizinkan)</option>
+                  <option value="0">Dilarang Dialihfungsikan (Zona LP2B Dilindungi)</option>
+                </select>
+                <span class="form-help">Menentukan skor kelayakan pembangunan Data Center AI</span>
+              </div>
+
+              <div class="form-group">
+                <label for="crud-status-hukum">Dasar Regulasi / Payung Hukum</label>
+                <input type="text" id="crud-status-hukum" placeholder="Contoh: UU No. 41 Tahun 2009 / Perda RTRW">
+              </div>
+
+              <div class="crud-form-actions">
+                <button type="button" id="btn-crud-status-reset" class="btn-crud-form btn-crud-reset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                  Reset
+                </button>
+                <button type="submit" id="btn-crud-status-submit" class="btn-crud-form btn-crud-submit">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Simpan Status
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- KARTU KANAN: TABEL DAFTAR DATA -->
+          <div class="crud-table-card">
+            <div class="crud-table-topbar">
+              <div class="crud-table-title-wrap">
+                <h3>Daftar Status Hukum Lahan</h3>
+                <span class="crud-count-badge" id="crud-status-count-wrapper">
+                  <strong id="crud-status-count">0</strong> Data
+                </span>
+              </div>
+              <div class="crud-table-controls">
+                <div class="crud-search-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" id="crud-status-search" placeholder="Cari status / dasar hukum...">
+                </div>
+                <button type="button" id="btn-crud-status-refresh" class="btn-crud-refresh" title="Segarkan Data">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                  Segarkan
+                </button>
+              </div>
+            </div>
+
+            <div class="crud-table-wrapper">
+              <div id="crud-status-loading" class="crud-loading-msg">
+                <div class="crud-spinner"></div>
+                <span>Memuat data status hukum...</span>
+              </div>
+              <div class="crud-table-scroll">
+                <table class="crud-table" id="crud-status-table" style="display:none;">
+                  <thead>
+                    <tr>
+                      <th style="width: 90px;">ID</th>
+                      <th>Kategori Status</th>
+                      <th style="width: 140px;">Alih Fungsi</th>
+                      <th>Dasar Hukum</th>
+                      <th style="text-align:center; width: 150px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="crud-status-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- 4. MODAL CRUD JENIS PENGAIRAN SAWAH                    -->
+  <!-- ======================================================= -->
+  <div id="modal-crud-pengairan" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="crud-pengairan-title">
+    <div class="crud-modal-card">
+      <div class="crud-modal-header">
+        <div class="crud-header-brand">
+          <div class="crud-header-icon-box">
+            <span>💧</span>
+          </div>
+          <div>
+            <h2 id="crud-pengairan-title">Kelola Jenis Pengairan Sawah</h2>
+            <div class="crud-header-tags">
+              <span class="crud-api-badge"><code>/api/jenis_pengairan</code></span>
+              <span class="crud-type-badge">Klasifikasi Sistem Irigasi Lahan</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="btn-close-crud-pengairan" class="modal-close" aria-label="Tutup modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="crud-modal-body">
+        <div class="crud-split-layout">
+          <!-- KARTU KIRI: FORMULIR -->
+          <div class="crud-form-card">
+            <div class="crud-form-topbar">
+              <div class="crud-form-title-group">
+                <span class="crud-mode-indicator" id="crud-pengairan-mode-badge">Mode Tambah</span>
+                <h3 id="crud-pengairan-form-title">Pendaftaran Jenis Pengairan</h3>
+              </div>
+            </div>
+
+            <div id="crud-pengairan-alert" class="crud-alert error"></div>
+
+            <form id="form-crud-pengairan" class="crud-form-inner" autocomplete="off">
+              <input type="hidden" id="crud-pengairan-edit-id">
+
+              <div class="form-group">
+                <label for="crud-pengairan-nama">Nama Jenis Pengairan Sawah <span class="required">*</span></label>
+                <input type="text" id="crud-pengairan-nama" placeholder="Contoh: Irigasi Teknis, Tadah Hujan" required>
+                <span class="form-help">Kategori jaringan pengairan sumber air</span>
+              </div>
+
+              <div class="form-group">
+                <label for="crud-pengairan-deskripsi">Deskripsi Saluran / Karakteristik</label>
+                <textarea id="crud-pengairan-deskripsi" rows="3" placeholder="Contoh: Saluran primer dan sekunder beton permanen dengan suplai air sepanjang tahun"></textarea>
+              </div>
+
+              <div class="crud-form-actions">
+                <button type="button" id="btn-crud-pengairan-reset" class="btn-crud-form btn-crud-reset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                  Reset
+                </button>
+                <button type="submit" id="btn-crud-pengairan-submit" class="btn-crud-form btn-crud-submit">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Simpan Pengairan
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- KARTU KANAN: TABEL DAFTAR DATA -->
+          <div class="crud-table-card">
+            <div class="crud-table-topbar">
+              <div class="crud-table-title-wrap">
+                <h3>Daftar Jenis Pengairan</h3>
+                <span class="crud-count-badge" id="crud-pengairan-count-wrapper">
+                  <strong id="crud-pengairan-count">0</strong> Data
+                </span>
+              </div>
+              <div class="crud-table-controls">
+                <div class="crud-search-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" id="crud-pengairan-search" placeholder="Cari jenis pengairan...">
+                </div>
+                <button type="button" id="btn-crud-pengairan-refresh" class="btn-crud-refresh" title="Segarkan Data">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                  Segarkan
+                </button>
+              </div>
+            </div>
+
+            <div class="crud-table-wrapper">
+              <div id="crud-pengairan-loading" class="crud-loading-msg">
+                <div class="crud-spinner"></div>
+                <span>Memuat data jenis pengairan...</span>
+              </div>
+              <div class="crud-table-scroll">
+                <table class="crud-table" id="crud-pengairan-table" style="display:none;">
+                  <thead>
+                    <tr>
+                      <th style="width: 90px;">ID</th>
+                      <th style="width: 200px;">Nama Jenis</th>
+                      <th>Deskripsi / Karakteristik</th>
+                      <th style="text-align:center; width: 150px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="crud-pengairan-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -544,8 +1071,12 @@
           <h2 id="export-modal-title">Ekspor Data ke Berkas JSON</h2>
           <span class="modal-card-sub">Unduh kumpulan data sawah dalam format array JSON</span>
         </div>
-        <button type="button" id="export-modal-close-btn" class="modal-close"
-          aria-label="Tutup modal ekspor">&times;</button>
+        <button type="button" id="export-modal-close-btn" class="modal-close" aria-label="Tutup modal ekspor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
       <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 18px;">
@@ -646,7 +1177,7 @@
       </div>
       <nav class="footer-nav" aria-label="Navigasi Footer">
         <a href="index.html">Beranda</a>
-        <a href="index.html#tentang-kami">Tentang Kami</a>
+        <a href="index.html#tentang-kami">Latar Belakang</a>
         <a href="index.html#analisis-lahan">Katalog</a>
         <a href="login.html">Login Admin</a>
       </nav>

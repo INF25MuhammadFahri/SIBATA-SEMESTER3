@@ -15,7 +15,7 @@ function checkDatabase(res) {
     return false;
   }
 
-  if (commondata.dbstatus.valid === false || commondata.dbstatus.success === false) {
+  if (commondata.dbstatus.success === false) {
     res.status(503).json({
       status: "db isnt availabel",
       is_err: true,

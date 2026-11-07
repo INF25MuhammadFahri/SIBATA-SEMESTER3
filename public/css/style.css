@@ -69,10 +69,29 @@
   font-family: var(--font-main);
 }
 
+html, body, * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
 html {
   scroll-behavior: smooth;
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+}
+
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
 }
 
 body {
@@ -661,6 +680,14 @@ nav.site-nav {
   box-shadow: var(--shadow-card);
   background: var(--bg-white);
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.table-responsive::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .data-table {
@@ -940,6 +967,8 @@ nav.site-nav {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .modal-backdrop.active {
@@ -952,7 +981,7 @@ nav.site-nav {
   width: 100%;
   max-width: 680px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   box-shadow: var(--shadow-modal);
   display: flex;
   flex-direction: column;
@@ -984,15 +1013,23 @@ nav.site-nav {
 .modal-close {
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  line-height: 1;
   color: var(--text-muted);
   border-radius: 50%;
   cursor: pointer;
   background: var(--bg-light);
+  border: 1.5px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.modal-close svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .modal-close:hover {
@@ -1005,6 +1042,16 @@ nav.site-nav {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-card-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .modal-grid {
@@ -1078,6 +1125,56 @@ nav.site-nav {
 .evaluation-box {
   background: var(--secondary-green-light);
   border-color: rgba(59, 126, 88, 0.4);
+}
+
+
+/* 13.1 PETA LEAFLET MODAL DETAIL */
+.modal-map-wrapper {
+  margin-top: 10px;
+  position: relative;
+}
+
+.modal-map-container {
+  width: 100%;
+  height: 250px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.modal-map-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-map-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  color: var(--primary-green) !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.btn-map-nav:hover {
+  background: var(--secondary-green-light);
+  border-color: var(--primary-green);
+  color: var(--primary-green) !important;
+  transform: translateY(-1px);
 }
 
 /* 14. LOGIN & ADMIN COMPATIBILITY */
@@ -2165,4 +2262,725 @@ nav a, nav li {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ==========================================================================
+   CRUD 4 OPSI MASTER (PEMILIK, WILAYAH, STATUS HUKUM, JENIS PENGAIRAN)
+   DESAIN MODERN, BERSIH, LEGA & PROFESIONAL
+   ========================================================================== */
+
+/* 1. Modal Card Wrapper */
+.crud-modal-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  width: 95%;
+  max-width: 1320px;
+  max-height: 94vh;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* 2. Header Modal Elegan */
+.crud-modal-header {
+  padding: 20px 32px;
+  background: #FFFFFF;
+  border-bottom: 1.5px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.crud-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.crud-header-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #E8F5E9;
+  border: 1.5px solid #C8E6C9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.crud-modal-header h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary-green);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.crud-header-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crud-api-badge code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: #F1F5F9;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid #CBD5E1;
+}
+
+.crud-type-badge {
+  font-size: 0.75rem;
+  color: var(--secondary-green);
+  font-weight: 600;
+  background: rgba(30, 77, 54, 0.06);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* 3. Modal Body Kontras Lembut */
+.crud-modal-body {
+  padding: 28px 32px;
+  overflow-y: auto;
+  max-height: calc(94vh - 85px);
+  background: #F8FAFC;
+}
+
+/* 4. Split Layout Dua-Kartu Mandiri (Form Kiri | Tabel Kanan) */
+.crud-split-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  width: 100%;
+}
+
+@media (min-width: 980px) {
+  .crud-split-layout {
+    grid-template-columns: 390px 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 1260px) {
+  .crud-split-layout {
+    grid-template-columns: 420px 1fr;
+    gap: 36px;
+    align-items: stretch;
+  }
+}
+
+/* 5. Kartu Formulir Kiri */
+.crud-form-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 26px 28px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.crud-form-topbar {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.crud-form-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crud-mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  transition: all 0.2s ease;
+}
+
+.crud-mode-indicator.edit-mode {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FCD34D;
+}
+
+.crud-form-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.crud-form-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.crud-form-inner .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.crud-form-inner .form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.crud-form-inner .form-group label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.crud-form-inner .form-group input,
+.crud-form-inner .form-group select {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #0F172A;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.crud-form-inner .form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #0F172A;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.crud-form-inner .form-group input:focus,
+.crud-form-inner .form-group select:focus,
+.crud-form-inner .form-group textarea:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px rgba(30, 77, 54, 0.15);
+}
+
+.crud-form-inner .form-help {
+  font-size: 0.72rem;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.crud-form-inner .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.crud-form-inner .form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* Wilayah Risk Factors Grid (3 Kolom Simetris) */
+.risk-factors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.risk-factor-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.risk-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.risk-factor-item select {
+  height: 38px !important;
+  padding: 0 8px !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Tombol Form Aksi Simetris */
+.crud-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.btn-crud-form {
+  height: 42px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.btn-crud-reset {
+  flex: 1;
+  background: #F8FAFC;
+  color: #475569;
+  border: 1.5px solid #CBD5E1;
+}
+
+.btn-crud-reset:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+.btn-crud-submit {
+  flex: 1.8;
+  background: var(--primary-green);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(30, 77, 54, 0.25);
+}
+
+.btn-crud-submit:hover {
+  background: var(--primary-green-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(30, 77, 54, 0.35);
+}
+
+/* Alert Form */
+.crud-alert {
+  font-size: 0.8125rem;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  display: none;
+  font-weight: 600;
+}
+
+.crud-alert.error {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.crud-alert.success {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+/* 6. Kartu Tabel Kanan */
+.crud-table-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+}
+
+.crud-table-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.crud-table-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crud-table-title-wrap h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.crud-count-badge {
+  background: #F1F5F9;
+  color: var(--primary-green);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  border: 1px solid #E2E8F0;
+}
+
+.crud-table-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Search Box Cepat */
+.crud-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9999px;
+  padding: 0 14px;
+  height: 36px;
+  transition: all 0.2s ease;
+}
+
+.crud-search-box svg {
+  color: #94A3B8;
+  flex-shrink: 0;
+}
+
+.crud-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.8125rem;
+  color: #0F172A;
+  width: 170px;
+  font-family: inherit;
+}
+
+.crud-search-box input::placeholder {
+  color: #94A3B8;
+}
+
+.crud-search-box:focus-within {
+  border-color: var(--primary-green);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(30, 77, 54, 0.12);
+}
+
+.crud-search-box:focus-within svg {
+  color: var(--primary-green);
+}
+
+.btn-crud-refresh {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #FFFFFF;
+  color: var(--primary-green);
+  border: 1.5px solid #E2E8F0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-crud-refresh:hover {
+  background: #E8F5E9;
+  border-color: var(--primary-green);
+}
+
+.btn-crud-refresh svg {
+  transition: transform 0.3s ease;
+}
+
+.btn-crud-refresh:hover svg {
+  transform: rotate(90deg);
+}
+
+/* Tabel Kontainer & Scrollbar */
+.crud-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  background: #FFFFFF;
+  overflow: hidden;
+  flex: 1;
+  min-height: 360px;
+}
+
+.crud-loading-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: #64748B;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.crud-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #E2E8F0;
+  border-top-color: var(--primary-green);
+  border-radius: 50%;
+  animation: crudSpin 0.7s linear infinite;
+}
+
+@keyframes crudSpin {
+  to { transform: rotate(360deg); }
+}
+
+.crud-table-scroll {
+  overflow-y: auto;
+  overflow-x: auto;
+  flex: 1;
+  max-height: 480px;
+}
+
+.crud-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.crud-table thead th {
+  position: sticky;
+  top: 0;
+  background: #F8FAFC;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 13px 16px;
+  border-bottom: 1.5px solid #E2E8F0;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.crud-table tbody td {
+  padding: 13px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+  color: #0F172A;
+}
+
+.crud-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.crud-table tbody tr:hover {
+  background: #F8FAF9;
+}
+
+.crud-table code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #F1F5F9;
+  color: var(--primary-green);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+}
+
+/* Badges Status di Tabel */
+.crud-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.crud-badge-success {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.crud-badge-danger {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+/* Tombol Aksi Simetris di Tabel */
+.crud-table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-crud-edit,
+.btn-crud-delete {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all var(--transition-fast);
+}
+
+.btn-crud-edit {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.btn-crud-edit:hover {
+  background: #10B981;
+  color: #FFFFFF;
+  border-color: #10B981;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-crud-delete {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.btn-crud-delete:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  border-color: #EF4444;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* 7. Aside Quick Access Card untuk 4 Opsi Master */
+.master-quick-access-card {
+  border-radius: var(--radius-card);
+  border: 1.5px solid var(--border-color);
+  padding: 24px;
+  background: #FFFFFF;
+  box-shadow: var(--shadow-card);
+}
+
+.master-quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-master-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.btn-master-card:hover {
+  background: #F0FDF4;
+  border-color: var(--primary-green);
+  transform: translateX(4px);
+  box-shadow: 0 4px 14px rgba(30, 77, 54, 0.08);
+}
+
+.btn-master-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btn-master-icon {
+  font-size: 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #F4F6F4;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.btn-master-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-master-text strong {
+  font-size: 0.88rem;
+  color: var(--text-dark);
+}
+
+.btn-master-card:hover .btn-master-text strong {
+  color: var(--primary-green);
+}
+
+.btn-master-text small {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.btn-master-text code {
+  font-family: var(--font-mono);
+  color: var(--primary-green);
+  font-weight: 600;
+}
+
+.btn-master-arrow {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.btn-master-card:hover .btn-master-arrow {
+  color: var(--primary-green);
+  transform: translateX(3px);
 }

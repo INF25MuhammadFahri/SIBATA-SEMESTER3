@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 
@@ -44,7 +46,7 @@
     <nav class="site-nav" id="main-nav-menu" aria-label="Navigasi Utama">
       <ul class="nav-links-wrapper">
         <li><a href="#beranda" class="nav-item-link active">Beranda</a></li>
-        <li><a href="#tentang-kami" class="nav-item-link">Tentang Kami</a></li>
+        <li><a href="#tentang-kami" class="nav-item-link">Latar Belakang</a></li>
         <li><a href="#analisis-lahan" class="nav-item-link">Katalog</a></li>
         <selipan></selipan>
         <li id="nav-auth-slot">
@@ -279,7 +281,12 @@
           <h2 id="modal-title">Laporan Analisis Kelayakan Lahan</h2>
           <span class="modal-card-sub">Evaluasi keterpenuhan infrastruktur teknis dan status hukum tata ruang</span>
         </div>
-        <button type="button" id="modal-close-btn" class="modal-close" aria-label="Tutup modal detail">&times;</button>
+        <button type="button" id="modal-close-btn" class="modal-close" aria-label="Tutup modal detail">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div id="modal-content-body" class="modal-card-body">
         <!-- Diisi secara dinamis oleh dashboard.js -->
@@ -296,7 +303,7 @@
       </div>
       <nav class="footer-nav" aria-label="Navigasi Footer">
         <a href="#beranda">Beranda</a>
-        <a href="#tentang-kami">Tentang Kami</a>
+        <a href="#tentang-kami">Latar Belakang</a>
         <a href="#analisis-lahan">Katalog</a>
         <a href="login.html">Login Admin</a>
       </nav>

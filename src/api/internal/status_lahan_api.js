@@ -38,6 +38,16 @@ async function generateNextId() {
     return `ST-${String(max + 1).padStart(2, "0")}`;
 }
 
+function normalizeStatusPayload(item) {
+    if (!item || typeof item !== "object") return null;
+    const { id, ...rest } = item;
+    const payload = { ...rest };
+    if (payload.boleh_alih_fungsi !== undefined) {
+        payload.boleh_alih_fungsi = (payload.boleh_alih_fungsi === true || payload.boleh_alih_fungsi === 1 || String(payload.boleh_alih_fungsi) === "1") ? 1 : 0;
+    }
+    return { id, payload };
+}
+
 export async function getStatusLahan(page, size, search) {
     try {
         const pageIndex = page === undefined || page === null ? 0 : toNonNegativeInt(page, "page");
@@ -54,7 +64,11 @@ export async function getStatusLahan(page, size, search) {
             offset: hasSize ? pageIndex * pageSize : undefined
         });
 
-        return createSuccsesReturn(rows.map(r => ({ ...r, id: String(r.id) })));
+        return createSuccsesReturn(rows.map(r => ({
+            ...r,
+            id: String(r.id),
+            boleh_alih_fungsi: Boolean(r.boleh_alih_fungsi)
+        })));
     } catch (err) {
         return createFailedReturn(err.message);
     }
@@ -66,9 +80,10 @@ export async function postStatusLahan(data) {
         const items = [].concat(data ?? []);
 
         for (const item of items) {
-            if (!item || typeof item !== "object") continue;
+            const normalized = normalizeStatusPayload(item);
+            if (!normalized) continue;
 
-            const { id, ...payload } = item;
+            const { id, payload } = normalized;
 
             if (hasId(id)) {
                 const idStr = String(id).trim();
@@ -95,9 +110,10 @@ export async function putStatusLahan(data) {
         const items = [].concat(data ?? []);
 
         for (const item of items) {
-            if (!item || typeof item !== "object" || !hasId(item.id)) continue;
+            const normalized = normalizeStatusPayload(item);
+            if (!normalized || !hasId(normalized.id)) continue;
 
-            const { id, ...payload } = item;
+            const { id, payload } = normalized;
             const idStr = String(id).trim();
 
             if (!(await idExists(idStr))) {

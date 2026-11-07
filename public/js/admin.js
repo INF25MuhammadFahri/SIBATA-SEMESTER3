@@ -8,6 +8,18 @@ import {
   putServerDataSawah,
   deleteServerDataSawah,
   postServerPemilik,
+  putServerPemilik,
+  deleteServerPemilik,
+  postServerWilayah,
+  putServerWilayah,
+  deleteServerWilayah,
+  postServerStatusLahan,
+  putServerStatusLahan,
+  deleteServerStatusLahan,
+  fetchServerJenisPengairan,
+  postServerJenisPengairan,
+  putServerJenisPengairan,
+  deleteServerJenisPengairan,
   postServerKandidatLokasi
 } from "./store.js";
 import { protectAdminPage, initNavbarAuth, isLoggedIn } from "./auth.js";
@@ -19,6 +31,7 @@ protectAdminPage();
 let cachedPemilik = [];
 let cachedWilayah = [];
 let cachedStatus = [];
+let cachedJenisPengairan = [];
 let currentAdminSawahList = [];
 let batchRowCounter = 0;
 
@@ -26,25 +39,51 @@ let batchRowCounter = 0;
 // 1. Inisialisasi Master Dropdown
 // ==========================================================================
 async function loadMasterDropdowns() {
-  const [pemilikList, wilayahList, statusList] = await Promise.all([
+  const [pemilikList, wilayahList, statusList, jpList] = await Promise.all([
     fetchServerPemilik(),
     fetchServerWilayah(),
-    fetchServerStatusLahan()
+    fetchServerStatusLahan(),
+    fetchServerJenisPengairan()
   ]);
 
   cachedPemilik = pemilikList;
   cachedWilayah = wilayahList;
   cachedStatus = statusList;
+  cachedJenisPengairan = jpList;
 
   // Dropdown Form Satuan
   populateSelect(document.getElementById("select-pemilik"), cachedPemilik, "pilih_pemilik");
   populateWilayahSelect(document.getElementById("select-wilayah"), cachedWilayah);
   populateSelect(document.getElementById("select-status-hukum"), cachedStatus, "pilih_status");
+  populateJenisSelect(document.getElementById("select-jenis-sawah"), cachedJenisPengairan);
 
   // Dropdown Form Edit Modal
   populateSelect(document.getElementById("edit-select-pemilik"), cachedPemilik, "pilih_pemilik");
   populateWilayahSelect(document.getElementById("edit-select-wilayah"), cachedWilayah);
   populateSelect(document.getElementById("edit-select-status"), cachedStatus, "pilih_status");
+  populateJenisSelect(document.getElementById("edit-select-jenis"), cachedJenisPengairan);
+
+  // Update badge counts di mode-master-pane
+  const badgePemilik = document.getElementById("badge-count-pemilik");
+  const badgeWilayah = document.getElementById("badge-count-wilayah");
+  const badgeStatus = document.getElementById("badge-count-status");
+  const badgePengairan = document.getElementById("badge-count-pengairan");
+  if (badgePemilik) badgePemilik.textContent = `${cachedPemilik.length} Terdata`;
+  if (badgeWilayah) badgeWilayah.textContent = `${cachedWilayah.length} Terdata`;
+  if (badgeStatus) badgeStatus.textContent = `${cachedStatus.length} Terdata`;
+  if (badgePengairan) badgePengairan.textContent = `${cachedJenisPengairan.length} Terdata`;
+
+  // Populate kabupaten dropdown di CRUD wilayah form
+  const kabSelect = document.getElementById("crud-wilayah-kabupaten");
+  if (kabSelect) {
+    kabSelect.innerHTML = '<option value="">-- Pilih Kabupaten/Kota --</option>';
+    kabupatenKota.forEach((kab) => {
+      const opt = document.createElement("option");
+      opt.value = kab.id;
+      opt.textContent = kab.nama;
+      kabSelect.appendChild(opt);
+    });
+  }
 }
 
 function populateSelect(selectEl, dataList, type) {
@@ -64,6 +103,25 @@ function populateSelect(selectEl, dataList, type) {
       const opt = document.createElement("option");
       opt.value = st.id;
       opt.textContent = `${st.kategori} - ${st.boleh_alih_fungsi ? "Boleh Alih Fungsi" : "Dilarang"}`;
+      selectEl.appendChild(opt);
+    });
+  }
+}
+
+function populateJenisSelect(selectEl, jenisList) {
+  if (!selectEl) return;
+  selectEl.innerHTML = "";
+  jenisList.forEach((jp) => {
+    const opt = document.createElement("option");
+    opt.value = jp.nama;
+    opt.textContent = jp.nama;
+    selectEl.appendChild(opt);
+  });
+  if (jenisList.length === 0) {
+    ["Tadah Hujan", "Setengah Teknis", "Irigasi Teknis"].forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
       selectEl.appendChild(opt);
     });
   }
@@ -929,58 +987,858 @@ function initEditSawahModal() {
 // ==========================================================================
 // 9. Modal Tambah Pemilik Baru (POST /api/pemilik)
 // ==========================================================================
-function initPemilikModal() {
-  const modal = document.getElementById("pemilik-modal");
-  const openBtn = document.getElementById("btn-open-pemilik-modal");
-  const openBtnSide = document.getElementById("btn-open-pemilik-modal-side");
-  const closeBtn = document.getElementById("pemilik-modal-close-btn");
-  const form = document.getElementById("form-add-pemilik");
+// ==========================================================================
+// 7. CRUD MANAGER — Helper Generik
+// ==========================================================================
 
-  if (!modal || !form) return;
+/** Tampilkan / sembunyikan alert di dalam modal CRUD */
+function showCrudAlert(alertEl, msg, isError = true) {
+  if (!alertEl) return;
+  alertEl.textContent = msg;
+  if (!msg) {
+    alertEl.style.display = "none";
+    return;
+  }
+  alertEl.style.display = "block";
+  alertEl.classList.toggle("error", isError);
+  alertEl.classList.toggle("success", !isError);
+}
 
-  const openModal = () => modal.classList.add("active");
-  const closeModal = () => modal.classList.remove("active");
+/** Helper pesan error ramah pengguna untuk operasi CRUD */
+function getCrudErrorMessage(res, defaultMsg = "Terjadi kesalahan saat memproses data.") {
+  if (!res) return defaultMsg;
+  const rawMsg = String(res.message || res.status || res.error || "");
+  if (
+    rawMsg.includes("foreign key") ||
+    rawMsg.includes("FOREIGN KEY") ||
+    rawMsg.includes("a foreign key constraint fails") ||
+    rawMsg.includes("ER_ROW_IS_REFERENCED")
+  ) {
+    return "Data tidak dapat dihapus karena masih digunakan sebagai referensi oleh data petak sawah. Silakan ubah atau hapus data sawah terkait terlebih dahulu.";
+  }
+  if (rawMsg.includes("conflict")) {
+    return "Data dengan ID tersebut sudah terdaftar di sistem (konflik ID).";
+  }
+  return rawMsg || defaultMsg;
+}
 
-  if (openBtn) openBtn.addEventListener("click", openModal);
-  if (openBtnSide) openBtnSide.addEventListener("click", openModal);
-  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+/** Buka / tutup modal backdrop CRUD */
+function makeCrudModalHandlers(modalId, openBtnIds = [], closeBtnIds = []) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return { open: () => {}, close: () => {} };
 
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
+  const open = () => {
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  };
+  const close = () => {
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
+  };
+
+  openBtnIds.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", open);
   });
+  closeBtnIds.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", close);
+  });
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) close();
+  });
+
+  return { open, close };
+}
+
+// ==========================================================================
+// 7a. CRUD PEMILIK LAHAN
+// ==========================================================================
+/** Helper pencarian cepat baris tabel CRUD secara realtime */
+function bindCrudTableSearch(searchInputId, tbodyEl) {
+  const input = document.getElementById(searchInputId);
+  if (!input || !tbodyEl) return;
+  input.addEventListener("input", () => {
+    const query = input.value.trim().toLowerCase();
+    const rows = tbodyEl.querySelectorAll("tr");
+    rows.forEach((row) => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(query) ? "" : "none";
+    });
+  });
+}
+
+function initCrudPemilik() {
+  const { open, close } = makeCrudModalHandlers(
+    "modal-crud-pemilik",
+    ["btn-open-pemilik-modal", "btn-open-pemilik-side", "btn-open-pemilik-grid"],
+    ["btn-close-crud-pemilik"]
+  );
+
+  const form = document.getElementById("form-crud-pemilik");
+  const editIdInput = document.getElementById("crud-pemilik-edit-id");
+  const namaInput = document.getElementById("crud-pemilik-nama");
+  const jenisSelect = document.getElementById("crud-pemilik-jenis");
+  const kontakInput = document.getElementById("crud-pemilik-kontak");
+  const alertEl = document.getElementById("crud-pemilik-alert");
+  const submitBtn = document.getElementById("btn-crud-pemilik-submit");
+  const resetBtn = document.getElementById("btn-crud-pemilik-reset");
+  const refreshBtn = document.getElementById("btn-crud-pemilik-refresh");
+  const formTitle = document.getElementById("crud-pemilik-form-title");
+  const modeBadge = document.getElementById("crud-pemilik-mode-badge");
+  const tbody = document.getElementById("crud-pemilik-tbody");
+  const tableEl = document.getElementById("crud-pemilik-table");
+  const loadingEl = document.getElementById("crud-pemilik-loading");
+  const countEl = document.getElementById("crud-pemilik-count");
+  const searchInput = document.getElementById("crud-pemilik-search");
+
+  if (!form) return;
+
+  bindCrudTableSearch("crud-pemilik-search", tbody);
+
+  async function renderTable() {
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (tableEl) tableEl.style.display = "none";
+    if (searchInput) searchInput.value = "";
+    const list = await fetchServerPemilik();
+    cachedPemilik = list;
+    if (countEl) countEl.textContent = list.length;
+    if (tbody) {
+      tbody.innerHTML = "";
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">Belum ada data pemilik terdaftar. Silakan tambah data baru.</td></tr>`;
+      } else {
+        list.forEach((p) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><code>${p.id}</code></td>
+            <td style="font-weight:600;color:#0F172A;">${p.nama}</td>
+            <td><span class="crud-badge crud-badge-success">${p.jenis || "Perorangan"}</span></td>
+            <td style="color:#64748B;font-family:var(--font-mono);font-size:0.8rem;">${p.kontak || "-"}</td>
+            <td>
+              <div class="crud-table-actions">
+                <button class="btn-crud-edit" data-id="${p.id}" title="Edit data ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Edit
+                </button>
+                <button class="btn-crud-delete" data-id="${p.id}" title="Hapus data ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Hapus
+                </button>
+              </div>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+    if (loadingEl) loadingEl.style.display = "none";
+    if (tableEl) tableEl.style.display = "";
+    bindTableActions();
+  }
+
+  function resetForm(clearAlert = true) {
+    form.reset();
+    if (editIdInput) editIdInput.value = "";
+    if (modeBadge) {
+      modeBadge.textContent = "Mode Tambah";
+      modeBadge.classList.remove("edit-mode");
+    }
+    if (formTitle) formTitle.textContent = "Pendaftaran Pemilik Baru";
+    if (submitBtn) {
+      submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Pemilik`;
+      submitBtn.disabled = false;
+    }
+    if (clearAlert) {
+      showCrudAlert(alertEl, "");
+    }
+  }
+
+  function bindTableActions() {
+    tbody.querySelectorAll(".btn-crud-edit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedPemilik.find((p) => String(p.id) === String(id));
+        if (!item) return;
+        editIdInput.value = item.id;
+        namaInput.value = item.nama;
+        jenisSelect.value = item.jenis || "Perorangan";
+        kontakInput.value = item.kontak || "";
+        if (modeBadge) {
+          modeBadge.textContent = `Mode Edit (${item.id})`;
+          modeBadge.classList.add("edit-mode");
+        }
+        if (formTitle) formTitle.textContent = `Edit Pemilik: ${item.nama}`;
+        if (submitBtn) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        }
+        showCrudAlert(alertEl, "");
+        namaInput.focus();
+      });
+    });
+
+    tbody.querySelectorAll(".btn-crud-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedPemilik.find((p) => String(p.id) === String(id));
+        if (!confirm(`Hapus pemilik "${item?.nama || id}"? Tindakan ini tidak dapat diurungkan.`)) return;
+        const res = await deleteServerPemilik([id]);
+        if (res.ok) {
+          showCrudAlert(alertEl, `Pemilik "${item?.nama || id}" berhasil dihapus.`, false);
+          setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+          await renderTable();
+          await loadMasterDropdowns();
+        } else {
+          const errMsg = getCrudErrorMessage(res, "Gagal menghapus data pemilik.");
+          showCrudAlert(alertEl, errMsg, true);
+          alert(`Gagal menghapus:\n\n${errMsg}`);
+        }
+      });
+    });
+  }
+
+  if (resetBtn) resetBtn.addEventListener("click", () => resetForm(true));
+  if (refreshBtn) refreshBtn.addEventListener("click", renderTable);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const nama = document.getElementById("input-pemilik-nama").value.trim();
-    const jenis = document.getElementById("select-pemilik-jenis").value;
-    const kontak = document.getElementById("input-pemilik-kontak").value.trim();
-
-    const payloadPemilik = {
-      id: null,
-      nama,
-      jenis,
-      kontak
+    showCrudAlert(alertEl, "");
+    const editId = editIdInput ? editIdInput.value.trim() : "";
+    const payload = {
+      id: editId || null,
+      nama: namaInput.value.trim(),
+      jenis: jenisSelect.value,
+      kontak: kontakInput.value.trim()
     };
+    if (!payload.nama) return showCrudAlert(alertEl, "Nama pemilik tidak boleh kosong.");
 
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Menyimpan..."; }
     try {
-      const serverRes = await postServerPemilik(payloadPemilik);
-
-      if (serverRes.status === 401) {
-        alert("Sesi login telah berakhir. Silakan login kembali.");
+      const res = editId
+        ? await putServerPemilik(payload)
+        : await postServerPemilik(payload);
+      if (res.httpStatus === 401 || res.status === 401) {
+        alert("Sesi login berakhir. Silakan login kembali.");
         window.location.replace("login.html?redirect=admin.html");
         return;
       }
-
+      if (!res.ok) {
+        showCrudAlert(alertEl, `Gagal menyimpan: ${getCrudErrorMessage(res, "Terjadi kesalahan server")}`);
+        return;
+      }
+      resetForm(false);
+      showCrudAlert(alertEl, editId ? "Data pemilik berhasil diperbarui!" : "Data pemilik berhasil ditambahkan!", false);
+      setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+      await renderTable();
       await loadMasterDropdowns();
-      form.reset();
-      closeModal();
-      alert(`Berhasil menambahkan pemilik baru: "${nama}" ke basis data.`);
     } catch (err) {
-      console.error("Gagal simpan pemilik:", err);
-      alert("Terjadi kesalahan saat menyimpan pemilik ke server.");
+      showCrudAlert(alertEl, `Kesalahan: ${err.message}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        if (editIdInput && editIdInput.value.trim()) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        } else {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Pemilik`;
+        }
+      }
     }
   });
+
+  const modalEl = document.getElementById("modal-crud-pemilik");
+  if (modalEl) {
+    const observer = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        if (m.target.classList.contains("active")) renderTable();
+      });
+    });
+    observer.observe(modalEl, { attributes: true, attributeFilter: ["class"] });
+  }
+}
+
+// ==========================================================================
+// 7b. CRUD WILAYAH ADMINISTRATIF
+// ==========================================================================
+function initCrudWilayah() {
+  const { open, close } = makeCrudModalHandlers(
+    "modal-crud-wilayah",
+    ["btn-open-wilayah-modal", "btn-open-wilayah-side", "btn-open-wilayah-grid"],
+    ["btn-close-crud-wilayah"]
+  );
+
+  const form = document.getElementById("form-crud-wilayah");
+  const editIdInput = document.getElementById("crud-wilayah-edit-id");
+  const kabSelect = document.getElementById("crud-wilayah-kabupaten");
+  const kecInput = document.getElementById("crud-wilayah-kecamatan");
+  const desaInput = document.getElementById("crud-wilayah-desa");
+  const luasInput = document.getElementById("crud-wilayah-luas");
+  const banjirSelect = document.getElementById("crud-wilayah-banjir");
+  const gempaSelect = document.getElementById("crud-wilayah-gempa");
+  const longsorSelect = document.getElementById("crud-wilayah-longsor");
+  const alertEl = document.getElementById("crud-wilayah-alert");
+  const submitBtn = document.getElementById("btn-crud-wilayah-submit");
+  const resetBtn = document.getElementById("btn-crud-wilayah-reset");
+  const refreshBtn = document.getElementById("btn-crud-wilayah-refresh");
+  const formTitle = document.getElementById("crud-wilayah-form-title");
+  const modeBadge = document.getElementById("crud-wilayah-mode-badge");
+  const tbody = document.getElementById("crud-wilayah-tbody");
+  const tableEl = document.getElementById("crud-wilayah-table");
+  const loadingEl = document.getElementById("crud-wilayah-loading");
+  const countEl = document.getElementById("crud-wilayah-count");
+  const searchInput = document.getElementById("crud-wilayah-search");
+
+  if (!form) return;
+
+  bindCrudTableSearch("crud-wilayah-search", tbody);
+
+  async function renderTable() {
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (tableEl) tableEl.style.display = "none";
+    if (searchInput) searchInput.value = "";
+    const list = await fetchServerWilayah();
+    cachedWilayah = list;
+    if (countEl) countEl.textContent = list.length;
+    if (tbody) {
+      tbody.innerHTML = "";
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">Belum ada data wilayah. Silakan tambah data baru.</td></tr>`;
+      } else {
+        list.forEach((w) => {
+          const kab = kabupatenKota.find((k) => String(k.id) === String(w.kabupaten_kota_id));
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><code>${w.id}</code></td>
+            <td style="font-weight:600;color:#0F172A;">${w.desa}</td>
+            <td>${w.kecamatan}</td>
+            <td style="color:#475569;">${kab ? kab.nama : w.kabupaten_kota_id}</td>
+            <td>
+              <div class="crud-table-actions">
+                <button class="btn-crud-edit" data-id="${w.id}" title="Edit wilayah ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Edit
+                </button>
+                <button class="btn-crud-delete" data-id="${w.id}" title="Hapus wilayah ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Hapus
+                </button>
+              </div>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+    if (loadingEl) loadingEl.style.display = "none";
+    if (tableEl) tableEl.style.display = "";
+    bindTableActions();
+  }
+
+  function resetForm(clearAlert = true) {
+    form.reset();
+    if (editIdInput) editIdInput.value = "";
+    if (modeBadge) {
+      modeBadge.textContent = "Mode Tambah";
+      modeBadge.classList.remove("edit-mode");
+    }
+    if (formTitle) formTitle.textContent = "Pendaftaran Wilayah Baru";
+    if (submitBtn) {
+      submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Wilayah`;
+      submitBtn.disabled = false;
+    }
+    if (clearAlert) {
+      showCrudAlert(alertEl, "");
+    }
+  }
+
+  function bindTableActions() {
+    tbody.querySelectorAll(".btn-crud-edit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedWilayah.find((w) => String(w.id) === String(id));
+        if (!item) return;
+        editIdInput.value = item.id;
+        if (kabSelect) kabSelect.value = item.kabupaten_kota_id;
+        kecInput.value = item.kecamatan;
+        desaInput.value = item.desa;
+        if (luasInput) luasInput.value = item.luas_baku_sawah ?? item.total_lahan_baku_ha ?? "";
+        if (banjirSelect) banjirSelect.value = item.risiko_banjir || "Rendah";
+        if (gempaSelect) gempaSelect.value = item.risiko_gempa || "Rendah";
+        if (longsorSelect) longsorSelect.value = item.risiko_longsor || "Rendah";
+        if (modeBadge) {
+          modeBadge.textContent = `Mode Edit (${item.id})`;
+          modeBadge.classList.add("edit-mode");
+        }
+        if (formTitle) formTitle.textContent = `Edit Wilayah: ${item.desa}`;
+        if (submitBtn) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        }
+        showCrudAlert(alertEl, "");
+        desaInput.focus();
+      });
+    });
+
+    tbody.querySelectorAll(".btn-crud-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedWilayah.find((w) => String(w.id) === String(id));
+        if (!confirm(`Hapus wilayah "${item?.desa || id}"? Tindakan ini tidak dapat diurungkan.`)) return;
+        const res = await deleteServerWilayah([id]);
+        if (res.ok) {
+          showCrudAlert(alertEl, `Wilayah "${item?.desa || id}" berhasil dihapus.`, false);
+          setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+          await renderTable();
+          await loadMasterDropdowns();
+        } else {
+          const errMsg = getCrudErrorMessage(res, "Gagal menghapus data wilayah.");
+          showCrudAlert(alertEl, errMsg, true);
+          alert(`Gagal menghapus:\n\n${errMsg}`);
+        }
+      });
+    });
+  }
+
+  if (resetBtn) resetBtn.addEventListener("click", () => resetForm(true));
+  if (refreshBtn) refreshBtn.addEventListener("click", renderTable);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showCrudAlert(alertEl, "");
+    const editId = editIdInput ? editIdInput.value.trim() : "";
+    const parsedLuas = luasInput ? parseFloat(luasInput.value) || 0 : 0;
+    const payload = {
+      id: editId || null,
+      kabupaten_kota_id: kabSelect ? kabSelect.value : "KAB-01",
+      kecamatan: kecInput.value.trim(),
+      desa: desaInput.value.trim(),
+      total_lahan_baku_ha: parsedLuas,
+      luas_baku_sawah: parsedLuas,
+      risiko_banjir: banjirSelect ? banjirSelect.value : "Rendah",
+      risiko_gempa: gempaSelect ? gempaSelect.value : "Rendah",
+      risiko_longsor: longsorSelect ? longsorSelect.value : "Rendah"
+    };
+    if (!payload.kecamatan || !payload.desa || !payload.kabupaten_kota_id) {
+      return showCrudAlert(alertEl, "Kabupaten/kota, kecamatan, dan desa wajib diisi.");
+    }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Menyimpan..."; }
+    try {
+      const res = editId
+        ? await putServerWilayah(payload)
+        : await postServerWilayah(payload);
+      if (res.httpStatus === 401 || res.status === 401) {
+        alert("Sesi login berakhir. Silakan login kembali.");
+        window.location.replace("login.html?redirect=admin.html");
+        return;
+      }
+      if (!res.ok) {
+        showCrudAlert(alertEl, `Gagal menyimpan: ${getCrudErrorMessage(res, "Terjadi kesalahan server")}`);
+        return;
+      }
+      resetForm(false);
+      showCrudAlert(alertEl, editId ? "Data wilayah berhasil diperbarui!" : "Data wilayah berhasil ditambahkan!", false);
+      setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+      await renderTable();
+      await loadMasterDropdowns();
+    } catch (err) {
+      showCrudAlert(alertEl, `Kesalahan: ${err.message}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        if (editIdInput && editIdInput.value.trim()) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        } else {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Wilayah`;
+        }
+      }
+    }
+  });
+
+  const modalEl = document.getElementById("modal-crud-wilayah");
+  if (modalEl) {
+    const observer = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        if (m.target.classList.contains("active")) renderTable();
+      });
+    });
+    observer.observe(modalEl, { attributes: true, attributeFilter: ["class"] });
+  }
+}
+
+// ==========================================================================
+// 7c. CRUD STATUS HUKUM LAHAN
+// ==========================================================================
+function initCrudStatus() {
+  const { open, close } = makeCrudModalHandlers(
+    "modal-crud-status",
+    ["btn-open-status-modal", "btn-open-status-side", "btn-open-status-grid"],
+    ["btn-close-crud-status"]
+  );
+
+  const form = document.getElementById("form-crud-status");
+  const editIdInput = document.getElementById("crud-status-edit-id");
+  const kategoriInput = document.getElementById("crud-status-kategori");
+  const alihSelect = document.getElementById("crud-status-alih");
+  const hukumInput = document.getElementById("crud-status-hukum");
+  const alertEl = document.getElementById("crud-status-alert");
+  const submitBtn = document.getElementById("btn-crud-status-submit");
+  const resetBtn = document.getElementById("btn-crud-status-reset");
+  const refreshBtn = document.getElementById("btn-crud-status-refresh");
+  const formTitle = document.getElementById("crud-status-form-title");
+  const modeBadge = document.getElementById("crud-status-mode-badge");
+  const tbody = document.getElementById("crud-status-tbody");
+  const tableEl = document.getElementById("crud-status-table");
+  const loadingEl = document.getElementById("crud-status-loading");
+  const countEl = document.getElementById("crud-status-count");
+  const searchInput = document.getElementById("crud-status-search");
+
+  if (!form) return;
+
+  bindCrudTableSearch("crud-status-search", tbody);
+
+  async function renderTable() {
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (tableEl) tableEl.style.display = "none";
+    if (searchInput) searchInput.value = "";
+    const list = await fetchServerStatusLahan();
+    cachedStatus = list;
+    if (countEl) countEl.textContent = list.length;
+    if (tbody) {
+      tbody.innerHTML = "";
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">Belum ada data status lahan. Silakan tambah data baru.</td></tr>`;
+      } else {
+        list.forEach((s) => {
+          const bolehBadge = s.boleh_alih_fungsi
+            ? '<span class="crud-badge crud-badge-success">Boleh Alih</span>'
+            : '<span class="crud-badge crud-badge-danger">Dilarang Alih</span>';
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><code>${s.id}</code></td>
+            <td style="font-weight:600;color:#0F172A;">${s.kategori}</td>
+            <td>${bolehBadge}</td>
+            <td style="color:#64748B;font-size:0.8rem;">${s.dasar_hukum || '<span style="color:#CBD5E1">-</span>'}</td>
+            <td>
+              <div class="crud-table-actions">
+                <button class="btn-crud-edit" data-id="${s.id}" title="Edit status ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Edit
+                </button>
+                <button class="btn-crud-delete" data-id="${s.id}" title="Hapus status ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Hapus
+                </button>
+              </div>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+    if (loadingEl) loadingEl.style.display = "none";
+    if (tableEl) tableEl.style.display = "";
+    bindTableActions();
+  }
+
+  function resetForm(clearAlert = true) {
+    form.reset();
+    if (editIdInput) editIdInput.value = "";
+    if (modeBadge) {
+      modeBadge.textContent = "Mode Tambah";
+      modeBadge.classList.remove("edit-mode");
+    }
+    if (formTitle) formTitle.textContent = "Pendaftaran Status Baru";
+    if (submitBtn) {
+      submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Status`;
+      submitBtn.disabled = false;
+    }
+    if (clearAlert) {
+      showCrudAlert(alertEl, "");
+    }
+  }
+
+  function bindTableActions() {
+    tbody.querySelectorAll(".btn-crud-edit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedStatus.find((s) => String(s.id) === String(id));
+        if (!item) return;
+        editIdInput.value = item.id;
+        kategoriInput.value = item.kategori;
+        if (alihSelect) alihSelect.value = (item.boleh_alih_fungsi === 1 || item.boleh_alih_fungsi === true || String(item.boleh_alih_fungsi) === "1") ? "1" : "0";
+        if (hukumInput) hukumInput.value = item.dasar_hukum || "";
+        if (modeBadge) {
+          modeBadge.textContent = `Mode Edit (${item.id})`;
+          modeBadge.classList.add("edit-mode");
+        }
+        if (formTitle) formTitle.textContent = `Edit Status: ${item.kategori}`;
+        if (submitBtn) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        }
+        showCrudAlert(alertEl, "");
+        kategoriInput.focus();
+      });
+    });
+
+    tbody.querySelectorAll(".btn-crud-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedStatus.find((s) => String(s.id) === String(id));
+        if (!confirm(`Hapus status "${item?.kategori || id}"? Tindakan ini tidak dapat diurungkan.`)) return;
+        const res = await deleteServerStatusLahan([id]);
+        if (res.ok) {
+          showCrudAlert(alertEl, `Status "${item?.kategori || id}" berhasil dihapus.`, false);
+          setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+          await renderTable();
+          await loadMasterDropdowns();
+        } else {
+          const errMsg = getCrudErrorMessage(res, "Gagal menghapus data status lahan.");
+          showCrudAlert(alertEl, errMsg, true);
+          alert(`Gagal menghapus:\n\n${errMsg}`);
+        }
+      });
+    });
+  }
+
+  if (resetBtn) resetBtn.addEventListener("click", () => resetForm(true));
+  if (refreshBtn) refreshBtn.addEventListener("click", renderTable);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showCrudAlert(alertEl, "");
+    const editId = editIdInput ? editIdInput.value.trim() : "";
+    const payload = {
+      id: editId || null,
+      kategori: kategoriInput.value.trim(),
+      boleh_alih_fungsi: alihSelect ? (alihSelect.value === "1" ? 1 : 0) : 1,
+      dasar_hukum: hukumInput ? hukumInput.value.trim() : ""
+    };
+    if (!payload.kategori) return showCrudAlert(alertEl, "Kategori status tidak boleh kosong.");
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Menyimpan..."; }
+    try {
+      const res = editId
+        ? await putServerStatusLahan(payload)
+        : await postServerStatusLahan(payload);
+      if (res.httpStatus === 401 || res.status === 401) {
+        alert("Sesi login berakhir. Silakan login kembali.");
+        window.location.replace("login.html?redirect=admin.html");
+        return;
+      }
+      if (!res.ok) {
+        showCrudAlert(alertEl, `Gagal menyimpan: ${getCrudErrorMessage(res, "Terjadi kesalahan server")}`);
+        return;
+      }
+      resetForm(false);
+      showCrudAlert(alertEl, editId ? "Data status berhasil diperbarui!" : "Data status berhasil ditambahkan!", false);
+      setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+      await renderTable();
+      await loadMasterDropdowns();
+    } catch (err) {
+      showCrudAlert(alertEl, `Kesalahan: ${err.message}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        if (editIdInput && editIdInput.value.trim()) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        } else {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Status`;
+        }
+      }
+    }
+  });
+
+  const modalEl = document.getElementById("modal-crud-status");
+  if (modalEl) {
+    const observer = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        if (m.target.classList.contains("active")) renderTable();
+      });
+    });
+    observer.observe(modalEl, { attributes: true, attributeFilter: ["class"] });
+  }
+}
+
+// ==========================================================================
+// 7d. CRUD JENIS PENGAIRAN SAWAH
+// ==========================================================================
+function initCrudPengairan() {
+  const { open, close } = makeCrudModalHandlers(
+    "modal-crud-pengairan",
+    ["btn-open-pengairan-modal", "btn-open-pengairan-side", "btn-open-pengairan-grid"],
+    ["btn-close-crud-pengairan"]
+  );
+
+  const form = document.getElementById("form-crud-pengairan");
+  const editIdInput = document.getElementById("crud-pengairan-edit-id");
+  const namaInput = document.getElementById("crud-pengairan-nama");
+  const deskInput = document.getElementById("crud-pengairan-deskripsi");
+  const alertEl = document.getElementById("crud-pengairan-alert");
+  const submitBtn = document.getElementById("btn-crud-pengairan-submit");
+  const resetBtn = document.getElementById("btn-crud-pengairan-reset");
+  const refreshBtn = document.getElementById("btn-crud-pengairan-refresh");
+  const formTitle = document.getElementById("crud-pengairan-form-title");
+  const modeBadge = document.getElementById("crud-pengairan-mode-badge");
+  const tbody = document.getElementById("crud-pengairan-tbody");
+  const tableEl = document.getElementById("crud-pengairan-table");
+  const loadingEl = document.getElementById("crud-pengairan-loading");
+  const countEl = document.getElementById("crud-pengairan-count");
+  const searchInput = document.getElementById("crud-pengairan-search");
+
+  if (!form) return;
+
+  bindCrudTableSearch("crud-pengairan-search", tbody);
+
+  async function renderTable() {
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (tableEl) tableEl.style.display = "none";
+    if (searchInput) searchInput.value = "";
+    const list = await fetchServerJenisPengairan();
+    cachedJenisPengairan = list;
+    if (countEl) countEl.textContent = list.length;
+    if (tbody) {
+      tbody.innerHTML = "";
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:#94a3b8;">Belum ada jenis pengairan. Silakan tambah data baru.</td></tr>`;
+      } else {
+        list.forEach((jp) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><code>${jp.id}</code></td>
+            <td style="font-weight:600;color:#0F172A;">${jp.nama}</td>
+            <td style="color:#64748B;font-size:0.82rem;">${jp.deskripsi || '<span style="color:#CBD5E1">-</span>'}</td>
+            <td>
+              <div class="crud-table-actions">
+                <button class="btn-crud-edit" data-id="${jp.id}" title="Edit jenis ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Edit
+                </button>
+                <button class="btn-crud-delete" data-id="${jp.id}" title="Hapus jenis ini">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Hapus
+                </button>
+              </div>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+    if (loadingEl) loadingEl.style.display = "none";
+    if (tableEl) tableEl.style.display = "";
+    bindTableActions();
+  }
+
+  function resetForm(clearAlert = true) {
+    form.reset();
+    if (editIdInput) editIdInput.value = "";
+    if (modeBadge) {
+      modeBadge.textContent = "Mode Tambah";
+      modeBadge.classList.remove("edit-mode");
+    }
+    if (formTitle) formTitle.textContent = "Pendaftaran Jenis Pengairan";
+    if (submitBtn) {
+      submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Pengairan`;
+      submitBtn.disabled = false;
+    }
+    if (clearAlert) {
+      showCrudAlert(alertEl, "");
+    }
+  }
+
+  function bindTableActions() {
+    tbody.querySelectorAll(".btn-crud-edit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedJenisPengairan.find((jp) => String(jp.id) === String(id));
+        if (!item) return;
+        editIdInput.value = item.id;
+        namaInput.value = item.nama;
+        if (deskInput) deskInput.value = item.deskripsi || "";
+        if (modeBadge) {
+          modeBadge.textContent = `Mode Edit (${item.id})`;
+          modeBadge.classList.add("edit-mode");
+        }
+        if (formTitle) formTitle.textContent = `Edit Pengairan: ${item.nama}`;
+        if (submitBtn) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        }
+        showCrudAlert(alertEl, "");
+        namaInput.focus();
+      });
+    });
+
+    tbody.querySelectorAll(".btn-crud-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const item = cachedJenisPengairan.find((jp) => String(jp.id) === String(id));
+        if (!confirm(`Hapus jenis pengairan "${item?.nama || id}"? Tindakan ini tidak dapat diurungkan.`)) return;
+        const res = await deleteServerJenisPengairan([id]);
+        if (res.ok) {
+          showCrudAlert(alertEl, `Jenis pengairan "${item?.nama || id}" berhasil dihapus.`, false);
+          setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+          await renderTable();
+          await loadMasterDropdowns();
+        } else {
+          const errMsg = getCrudErrorMessage(res, "Gagal menghapus jenis pengairan.");
+          showCrudAlert(alertEl, errMsg, true);
+          alert(`Gagal menghapus:\n\n${errMsg}`);
+        }
+      });
+    });
+  }
+
+  if (resetBtn) resetBtn.addEventListener("click", () => resetForm(true));
+  if (refreshBtn) refreshBtn.addEventListener("click", renderTable);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showCrudAlert(alertEl, "");
+    const editId = editIdInput ? editIdInput.value.trim() : "";
+    const payload = {
+      id: editId || null,
+      nama: namaInput.value.trim(),
+      deskripsi: deskInput ? deskInput.value.trim() : ""
+    };
+    if (!payload.nama) return showCrudAlert(alertEl, "Nama jenis pengairan tidak boleh kosong.");
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Menyimpan..."; }
+    try {
+      const res = editId
+        ? await putServerJenisPengairan(payload)
+        : await postServerJenisPengairan(payload);
+      if (res.httpStatus === 401 || res.status === 401) {
+        alert("Sesi login berakhir. Silakan login kembali.");
+        window.location.replace("login.html?redirect=admin.html");
+        return;
+      }
+      if (!res.ok) {
+        showCrudAlert(alertEl, `Gagal menyimpan: ${getCrudErrorMessage(res, "Terjadi kesalahan server")}`);
+        return;
+      }
+      resetForm(false);
+      showCrudAlert(alertEl, editId ? "Data jenis pengairan berhasil diperbarui!" : "Data jenis pengairan berhasil ditambahkan!", false);
+      setTimeout(() => showCrudAlert(alertEl, ""), 4000);
+      await renderTable();
+      await loadMasterDropdowns();
+    } catch (err) {
+      showCrudAlert(alertEl, `Kesalahan: ${err.message}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        if (editIdInput && editIdInput.value.trim()) {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Perubahan`;
+        } else {
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Simpan Pengairan`;
+        }
+      }
+    }
+  });
+
+  const modalEl = document.getElementById("modal-crud-pengairan");
+  if (modalEl) {
+    const observer = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        if (m.target.classList.contains("active")) renderTable();
+      });
+    });
+    observer.observe(modalEl, { attributes: true, attributeFilter: ["class"] });
+  }
 }
 
 // Helper auto-evaluasi kandidat data center
@@ -1278,8 +2136,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   initJsonBatchEditor();
   initAdminTableActions();
   initEditSawahModal();
-  initPemilikModal();
   initExportJsonModal();
+
+  // 4 CRUD Modals untuk data master
+  initCrudPemilik();
+  initCrudWilayah();
+  initCrudStatus();
+  initCrudPengairan();
 
   // Muat tabel CRUD data sawah lengkap
   await loadAndRenderAdminTable();
