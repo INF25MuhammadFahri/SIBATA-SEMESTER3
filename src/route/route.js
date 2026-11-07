@@ -9,6 +9,7 @@ export * as pemilik from "./internal/pemilik.js";
 export * as kabupaten_kota from "./internal/kabupaten_kota.js";
 export * as sawah_infrastruktur from "./internal/sawah_infrastruktur.js";
 export * as akun_manager from "./internal/Akun_manager.js";
+export * as jenis_pengairan from "./internal/jenis_pengairan.js";
 /**
  * Endpoint gabungan (joined data) untuk kebutuhan visualisasi dashboard frontend
  */

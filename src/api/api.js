@@ -7,7 +7,8 @@ export * as statusLahan from "./internal/status_lahan_api.js";
 export * as statudLahan from "./internal/status_lahan_api.js";
 export * as pemilik from "./internal/pemilik_api.js";
 export * as kabupatenKota from "./internal/kabupaten_kota_api.js";
-export * as sawah_infrastruktur from "./internal/sawah_infrastruktur_api.js"
+export * as sawah_infrastruktur from "./internal/sawah_infrastruktur_api.js";
+export * as jenisPengairan from "./internal/jenis_pengairan_api.js";
 import * as commondata from "../common_data.js";
 
 export async function init() {

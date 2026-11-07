@@ -60,15 +60,26 @@ export async function getPemilik(page, size, search) {
     }
 }
 
+function normalizePemilikPayload(item) {
+    if (!item || typeof item !== "object") return null;
+    const { id, ...rest } = item;
+    const payload = { ...rest };
+    if (!payload.jenis || (payload.jenis !== "Perorangan" && payload.jenis !== "Kelompok Tani")) {
+        payload.jenis = "Perorangan";
+    }
+    return { id, payload };
+}
+
 export async function postPemilik(data) {
     try {
         const conflicts = [];
         const items = [].concat(data ?? []);
 
         for (const item of items) {
-            if (!item || typeof item !== "object") continue;
+            const normalized = normalizePemilikPayload(item);
+            if (!normalized) continue;
 
-            const { id, ...payload } = item;
+            const { id, payload } = normalized;
 
             if (hasId(id)) {
                 const idStr = String(id).trim();
@@ -95,9 +106,10 @@ export async function putPemilik(data) {
         const items = [].concat(data ?? []);
 
         for (const item of items) {
-            if (!item || typeof item !== "object" || !hasId(item.id)) continue;
+            const normalized = normalizePemilikPayload(item);
+            if (!normalized || !hasId(normalized.id)) continue;
 
-            const { id, ...payload } = item;
+            const { id, payload } = normalized;
             const idStr = String(id).trim();
 
             if (!(await idExists(idStr))) {

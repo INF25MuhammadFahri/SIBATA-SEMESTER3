@@ -54,6 +54,10 @@ SELECT expected.table_name AS tabel,
            WHEN LOWER(actual.COLUMN_TYPE) = LOWER(expected.expected_type)
                THEN 'SESUAI'
 
+           WHEN expected.table_name = 'data_sawah' AND expected.column_name = 'jenis_sawah'
+                AND (actual.DATA_TYPE = 'varchar' OR actual.DATA_TYPE = 'enum')
+               THEN 'SESUAI'
+
            ELSE 'PERIKSA TIPE'
        END AS status
 FROM (

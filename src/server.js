@@ -82,6 +82,7 @@ app.use("/api/kandidat_lokasi", route.kandidat_lokasi.router);
 app.use("/api/status_lahan", route.status_lahan.router);
 app.use("/api/pemilik", route.pemilik.router);
 app.use("/api/kabupaten_kota", route.kabupaten_kota.router);
+app.use("/api/jenis_pengairan", route.jenis_pengairan.router);
 app.get("/api/joined", route.getJoined);
 app.get("/api/databaseStatus",route.getDbStatus);
 app.use("/api/accounts",route.akun_manager.router);
