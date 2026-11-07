@@ -481,6 +481,7 @@ function initJsonBatchEditor() {
   const textarea = document.getElementById("json-array-input");
   const btnLoadSample = document.getElementById("btn-load-json-sample");
   const btnFormat = document.getElementById("btn-format-json");
+  const btnClearJson = document.getElementById("btn-clear-json");
 
   const sampleArray = [
     {
@@ -556,6 +557,14 @@ function initJsonBatchEditor() {
       } catch (e) {
         alert("JSON tidak valid: " + e.message);
       }
+    });
+  }
+
+  if (btnClearJson && textarea) {
+    btnClearJson.addEventListener("click", () => {
+      textarea.value = "";
+      updateJsonIndicator();
+      textarea.focus();
     });
   }
 

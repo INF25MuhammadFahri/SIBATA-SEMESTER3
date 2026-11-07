@@ -187,81 +187,6 @@
               </div>
             </form>
           </section>
-
-          <!-- Aside Info -->
-          <aside style="display: flex; flex-direction: column; gap: 20px;">
-            <div class="admin-card">
-              <div class="admin-card-header" style="margin-bottom: 14px; padding-bottom: 10px;">
-                <h2>Integritas Relasional RDBMS</h2>
-              </div>
-              <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 14px;">Formulir ini menerapkan
-                batasan kunci asing (Foreign Key):</p>
-              <ul
-                style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.8125rem; color: var(--text-muted);">
-                <li style="border-left: 3px solid var(--primary-green); padding-left: 10px;">
-                  <strong style="color: var(--text-dark);">pemilik_id:</strong> Menghubungkan kepemilikan ke tabel
-                  <code>pemilik</code>.
-                </li>
-                <li style="border-left: 3px solid var(--secondary-green); padding-left: 10px;">
-                  <strong style="color: var(--text-dark);">wilayah_id:</strong> Menghubungkan ke tabel master
-                  <code>wilayah</code> (sinkronisasi risiko bencana).
-                </li>
-                <li style="border-left: 3px solid var(--accent-gold); padding-left: 10px;">
-                  <strong style="color: var(--text-dark);">status_lahan_id:</strong> Memastikan kepatuhan terhadap
-                  perlindungan LP2B (UU No. 41 Tahun 2009).
-                </li>
-              </ul>
-            </div>
-
-            <div class="admin-card master-quick-access-card">
-              <div class="admin-card-header" style="margin-bottom: 16px; padding-bottom: 12px;">
-                <h2>Master Data &amp; Relasi</h2>
-                <p>Kelola data referensi kunci asing (Foreign Key):</p>
-              </div>
-              <div class="master-quick-links">
-                <button type="button" id="btn-open-pemilik-side" class="btn-master-card">
-                  <span class="btn-master-card-left">
-                    <span class="btn-master-icon">👤</span>
-                    <span class="btn-master-text">
-                      <strong>Pemilik Lahan</strong>
-                      <small>Tabel relasi master <code>pemilik</code></small>
-                    </span>
-                  </span>
-                  <span class="btn-master-arrow">&rarr;</span>
-                </button>
-                <button type="button" id="btn-open-wilayah-side" class="btn-master-card">
-                  <span class="btn-master-card-left">
-                    <span class="btn-master-icon">📍</span>
-                    <span class="btn-master-text">
-                      <strong>Wilayah Administratif</strong>
-                      <small>Tabel relasi master <code>wilayah</code></small>
-                    </span>
-                  </span>
-                  <span class="btn-master-arrow">&rarr;</span>
-                </button>
-                <button type="button" id="btn-open-status-side" class="btn-master-card">
-                  <span class="btn-master-card-left">
-                    <span class="btn-master-icon">⚖️</span>
-                    <span class="btn-master-text">
-                      <strong>Status Hukum Lahan</strong>
-                      <small>Tabel relasi master <code>status_lahan</code></small>
-                    </span>
-                  </span>
-                  <span class="btn-master-arrow">&rarr;</span>
-                </button>
-                <button type="button" id="btn-open-pengairan-side" class="btn-master-card">
-                  <span class="btn-master-card-left">
-                    <span class="btn-master-icon">💧</span>
-                    <span class="btn-master-text">
-                      <strong>Jenis Pengairan</strong>
-                      <small>Tabel referensi <code>jenis_pengairan</code></small>
-                    </span>
-                  </span>
-                  <span class="btn-master-arrow">&rarr;</span>
-                </button>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
 
@@ -320,28 +245,25 @@
       <!-- 3. PANE MODE IMPORT JSON ARRAY -->
       <div id="mode-json-pane" class="batch-mode-container">
         <section class="admin-card" style="padding: 28px;">
-          <div class="admin-card-header" style="margin-bottom: 16px;">
+          <div class="admin-card-header" style="margin-bottom: 20px;">
             <h2>Import Data Format JSON Array</h2>
-            <p>Kirimkan array of objects JSON langsung ke backend <code>POST /api/data_sawah</code>. Cocok untuk
-              integrasi data dari API eksternal atau berkas database ekspor.</p>
+            <p>Salin dan tempel data berformat JSON Array ke dalam formulir di bawah ini untuk dikirim sekaligus ke basis data <code>POST /api/data_sawah</code>.</p>
           </div>
 
           <form id="form-json-batch">
             <div class="json-batch-editor-wrapper">
               <div class="json-editor-topbar">
-                <div class="json-window-dots">
-                  <span class="dot dot-red"></span>
-                  <span class="dot dot-yellow"></span>
-                  <span class="dot dot-green"></span>
+                <div class="json-topbar-left">
+                  <span class="json-editor-title">Teks Data JSON</span>
+                  <span class="json-editor-subtitle">Format data harus berupa daftar objek di dalam tanda kurung siku <code>[ { ... } ]</code></span>
                 </div>
-                <span class="json-editor-title">payload.json &bull; Array of Objects</span>
                 <span id="json-syntax-indicator" class="json-indicator badge-neutral">Format: [ { ... } ]</span>
               </div>
               <textarea id="json-array-input" class="json-textarea" spellcheck="false"
-                placeholder="[\n  {\n    &quot;nomor_persil&quot;: &quot;PRS-9001&quot;,\n    &quot;luas_hektar&quot;: 12.5,\n    ...\n  }\n]"></textarea>
+                placeholder='[&#10;  {&#10;    "nomor_persil": "PRS-9001",&#10;    "luas_hektar": 12.5,&#10;    "pemilik_id": "PMK-001",&#10;    "wilayah_id": "WIL-01",&#10;    "status_lahan_id": "ST-01",&#10;    "jenis_sawah": "Irigasi Teknis",&#10;    "latitude": -6.3458,&#10;    "longitude": 107.3124&#10;  }&#10;]'></textarea>
             </div>
 
-            <div class="batch-control-toolbar">
+            <div class="batch-control-toolbar" style="margin-top: 16px;">
               <div class="batch-left-buttons">
                 <button type="button" id="btn-load-json-sample" class="btn-pill-small btn-pill-outline">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -350,7 +272,7 @@
                     <line x1="16" y1="13" x2="8" y2="13"></line>
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                   </svg>
-                  Muat Contoh Array Valid
+                  Muat Contoh Format
                 </button>
                 <button type="button" id="btn-format-json" class="btn-pill-small btn-pill-outline">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -358,12 +280,15 @@
                     <line x1="9" y1="20" x2="15" y2="20"></line>
                     <line x1="12" y1="4" x2="12" y2="20"></line>
                   </svg>
-                  Format / Rapikan JSON
+                  Rapikan Format JSON
+                </button>
+                <button type="button" id="btn-clear-json" class="btn-pill-small btn-pill-danger">
+                  Bersihkan
                 </button>
               </div>
               <div>
                 <button type="submit" id="btn-submit-json-batch" class="btn-primary" style="padding: 10px 24px;">
-                  Kirim Data Array JSON ke Backend
+                  Simpan Data JSON ke Server
                 </button>
               </div>
             </div>
