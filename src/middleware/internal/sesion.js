@@ -1,8 +1,20 @@
 import crypto from 'crypto';
+//file:sesion.js
+/**
+ * @typedef {Object} SessionData
+ * @property {string} sessionId
+ * @property {string} userId
+ * @property {Object} data
+ * @property {number} createdAt
+ * @property {number} expiresAt
+ */
 
 class SessionManager {
   constructor() {
     // Menyimpan sesi di memori server (untuk production skala besar, gunakan Redis)
+    /**
+    * @type {Map<string,SessionData>}
+    */
     this.sessions = new Map();
     
     // Interval otomatis untuk membersihkan sesi yang kedaluwarsa setiap 1 menit
@@ -10,6 +22,10 @@ class SessionManager {
   }
 
   // 1. Generate Sesi Baru
+  /**
+  *@param {string} userId 
+  * 
+  */
   createSession(userId, customData = {}, ttlInMinutes = 30) {
     const sessionId = crypto.randomBytes(32).toString('hex');
     const now = Date.now();

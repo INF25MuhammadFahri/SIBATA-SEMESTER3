@@ -2,7 +2,8 @@ import { login, isLoggedIn } from "./auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const redirectTarget = urlParams.get("redirect") || "admin.html";
+  const redirectTarget = urlParams.get("redirect")||"admin";
+ // const redirectTarget = urlParams.get("redirect") || "admin";
 
   // Jika sudah login, langsung alihkan ke halaman tujuan
   if (isLoggedIn()) {
@@ -40,8 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const result = await login(username, password);
-
+        
+        
         if (result.success) {
+          
           if (alertBox) {
             alertBox.className = "login-alert success";
             const sessionNote = result.sessionId
@@ -65,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } catch (err) {
+        
         if (alertBox) {
           alertBox.className = "login-alert danger";
           alertBox.textContent = "Terjadi kesalahan saat memproses login.";
