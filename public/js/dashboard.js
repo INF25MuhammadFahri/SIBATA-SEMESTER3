@@ -215,6 +215,79 @@ function renderTable(data) {
   });
 }
 
+// Instance Leaflet Map untuk Modal Detail
+let detailMapInstance = null;
+
+function renderModalMap(item) {
+  const mapContainer = document.getElementById("modal-map");
+  if (!mapContainer || typeof L === "undefined") return;
+
+  const lat = parseFloat(item.latitude);
+  const lng = parseFloat(item.longitude);
+
+  if (isNaN(lat) || isNaN(lng)) {
+    mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-light);font-size:0.8125rem;">Koordinat lokasi tidak valid</div>';
+    return;
+  }
+
+  // Bersihkan map sebelumnya jika sudah ada agar tidak error "Map container is already initialized"
+  if (detailMapInstance) {
+    detailMapInstance.remove();
+    detailMapInstance = null;
+  }
+
+  try {
+    detailMapInstance = L.map("modal-map", {
+      zoomControl: true,
+      scrollWheelZoom: false // Mencegah zoom tidak sengaja saat scroll modal
+    }).setView([lat, lng], 15);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+    }).addTo(detailMapInstance);
+
+    // Marker utama lokasi petak sawah
+    const marker = L.marker([lat, lng]).addTo(detailMapInstance);
+    
+    const statusDC = item.kandidatData ? item.kandidatData.status_penilaian : "Belum Dinilai";
+    const skorDC = item.kandidatData ? item.kandidatData.skor_kelayakan : "-";
+    
+    marker.bindPopup(`
+      <div style="font-family: inherit; font-size: 13px; line-height: 1.5; min-width: 160px;">
+        <strong style="color: #1E4D36; font-size: 14px;">🌾 Petak ${item.nomor_persil}</strong><br>
+        <span>Pemilik: <b>${item.pemilikData?.nama || "-"}</b></span><br>
+        <span>Ds. ${item.wilayahData?.desa || "-"}, Kec. ${item.wilayahData?.kecamatan || "-"}</span><br>
+        <span>Luas: <b>${item.luas_hektar} Ha</b> (${item.jenis_sawah})</span><br>
+        <span style="display:inline-block; margin-top: 4px; padding: 2px 6px; background: #e8f3ed; color: #1E4D36; border-radius: 4px; font-weight: bold; font-size: 11px;">
+          Kelayakan DC: ${statusDC} (${skorDC}/100)
+        </span>
+      </div>
+    `).openPopup();
+
+    // Area estimasi petak sawah (lingkaran perimeter)
+    L.circle([lat, lng], {
+      color: '#1E4D36',
+      fillColor: '#52B788',
+      fillOpacity: 0.2,
+      weight: 2,
+      radius: 120
+    }).addTo(detailMapInstance);
+
+    // Invalidate size setelah transisi modal selesai agar tile ter-render penuh
+    setTimeout(() => {
+      if (detailMapInstance) {
+        detailMapInstance.invalidateSize();
+      }
+    }, 250);
+  } catch (err) {
+    console.warn("Gagal inisialisasi peta Leaflet:", err);
+  }
+}
+
+// Variabel penyimpan posisi scroll beranda saat modal dibuka
+let savedScrollY = 0;
+
 // Modal Detail Lahan
 function showDetailModal(item) {
   const modal = document.getElementById("detail-modal");
@@ -258,6 +331,23 @@ function showDetailModal(item) {
       </div>
     </div>
 
+    <!-- Peta Lokasi Spasial Sawah (Leaflet) -->
+    <div class="modal-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Peta Lokasi Spasial Sawah</h3>
+        <span class="badge badge-primary">${item.latitude}, ${item.longitude}</span>
+      </div>
+      <div class="modal-map-wrapper">
+        <div id="modal-map" class="modal-map-container"></div>
+        <div class="modal-map-footer">
+          <span>📍 Lokasi: Ds. ${item.wilayahData?.desa || "-"}, Kec. ${item.wilayahData?.kecamatan || "-"} (${item.latitude}, ${item.longitude})</span>
+          <a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" rel="noopener noreferrer" class="btn-map-nav">
+            Buka di Google Maps ↗
+          </a>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-section">
       <h3>Profil Risiko Bencana Wilayah</h3>
       <div class="modal-risk-grid">
@@ -292,7 +382,21 @@ function showDetailModal(item) {
     </div>
   `;
 
+  // Kunci scroll posisi beranda agar tidak bergeser saat membaca modal
+  savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.documentElement.classList.add("modal-open");
+  document.body.classList.add("modal-open");
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${savedScrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+  document.body.style.overflow = "hidden";
+
   modal.classList.add("active");
+
+  // Render peta Leaflet untuk sawah yang dipilih
+  renderModalMap(item);
 }
 
 // Logika Filter & Pencarian
@@ -346,14 +450,120 @@ function filterData() {
   renderTable(filtered);
 }
 
+function closeDetailModal() {
+  const modal = document.getElementById("detail-modal");
+  if (!modal) return;
+  modal.classList.remove("active");
+  document.documentElement.classList.remove("modal-open");
+  document.body.classList.remove("modal-open");
+
+  // Kembalikan posisi scroll beranda persis seperti sebelum modal dibuka
+  const scrollYToRestore = savedScrollY;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  document.body.style.overflow = "";
+  window.scrollTo(0, scrollYToRestore);
+}
+
 function initDetailModal() {
   const modal = document.getElementById("detail-modal");
   const closeBtn = document.getElementById("modal-close-btn");
   if (!modal || !closeBtn) return;
 
-  closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+  closeBtn.addEventListener("click", closeDetailModal);
   modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.classList.remove("active");
+    if (e.target === modal) closeDetailModal();
+  });
+
+  // Mencegah scroll tembus dari modal ke beranda (wheel & touch overscroll containment)
+  modal.addEventListener(
+    "wheel",
+    (e) => {
+      const modalBody = e.target.closest(".modal-card-body");
+      if (!modalBody) {
+        // Jika kursor berada di backdrop atau header modal, blokir wheel event total
+        e.preventDefault();
+        return;
+      }
+
+      // Jika kursor di dalam modal-card-body, cegah scroll bocor saat mentok atas atau bawah
+      const delta = e.deltaY;
+      const isUp = delta < 0;
+      const isDown = delta > 0;
+      const atTop = modalBody.scrollTop <= 0;
+      const atBottom = Math.ceil(modalBody.scrollTop + modalBody.clientHeight) >= modalBody.scrollHeight;
+
+      if ((isUp && atTop) || (isDown && atBottom)) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  let touchStartY = 0;
+  modal.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartY = e.touches[0].clientY;
+      }
+    },
+    { passive: true }
+  );
+
+  modal.addEventListener(
+    "touchmove",
+    (e) => {
+      const modalBody = e.target.closest(".modal-card-body");
+      if (!modalBody) {
+        e.preventDefault();
+        return;
+      }
+
+      if (e.touches && e.touches.length > 0) {
+        const currentY = e.touches[0].clientY;
+        const isUp = currentY > touchStartY; // swipe ke bawah (scroll up)
+        const isDown = currentY < touchStartY; // swipe ke atas (scroll down)
+        const atTop = modalBody.scrollTop <= 0;
+        const atBottom = Math.ceil(modalBody.scrollTop + modalBody.clientHeight) >= modalBody.scrollHeight;
+
+        if ((isUp && atTop) || (isDown && atBottom)) {
+          e.preventDefault();
+        }
+      }
+    },
+    { passive: false }
+  );
+
+  // Cegah tombol keyboard menggeser halaman beranda saat modal aktif
+  window.addEventListener("keydown", (e) => {
+    if (!modal.classList.contains("active")) return;
+
+    if (e.key === "Escape") {
+      closeDetailModal();
+      return;
+    }
+
+    const scrollKeys = ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "];
+    if (scrollKeys.includes(e.key)) {
+      const modalBody = modal.querySelector(".modal-card-body");
+      if (!modalBody) return;
+
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+      if (activeTag !== "input" && activeTag !== "textarea") {
+        e.preventDefault();
+        const step = 60;
+        if (e.key === "ArrowDown") modalBody.scrollTop += step;
+        else if (e.key === "ArrowUp") modalBody.scrollTop -= step;
+        else if (e.key === "PageDown" || e.key === " ") modalBody.scrollTop += modalBody.clientHeight * 0.8;
+        else if (e.key === "PageUp") modalBody.scrollTop -= modalBody.clientHeight * 0.8;
+        else if (e.key === "Home") modalBody.scrollTop = 0;
+        else if (e.key === "End") modalBody.scrollTop = modalBody.scrollHeight;
+      }
+    }
   });
 }
 
