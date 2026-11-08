@@ -604,7 +604,7 @@ function initNavActiveTracker() {
   const navLinks = document.querySelectorAll("#main-nav-menu a.nav-item-link");
   if (!navLinks.length) return;
 
-  const sectionIds = ["beranda", "tentang-kami", "analisis-lahan"];
+  const sectionIds = ["beranda", "latar-belakang", "analisis-lahan"];
   const sections = sectionIds
     .map((id) => document.getElementById(id))
     .filter(Boolean);

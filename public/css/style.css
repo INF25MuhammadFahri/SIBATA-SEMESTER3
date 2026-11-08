@@ -186,7 +186,7 @@ button, input, select, textarea {
   transform: translateY(-2px);
 }
 
-/* 4. NAVBAR (HANYA: BERANDA, TENTANG KAMI, LOGIN ADMIN) */
+/* 4. NAVBAR (BERANDA, LATAR BELAKANG, KATALOG, LOGIN ADMIN) */
 header.site-header {
   display: flex;
   justify-content: space-between;
@@ -511,7 +511,7 @@ nav.site-nav {
 .metric-card-warning::before { background: var(--accent-gold-dark); }
 .metric-card-warning .metric-value { color: var(--accent-gold-dark); }
 
-/* 8. SECTION TENTANG KAMI */
+/* 8. SECTION LATAR BELAKANG */
 .about-section {
   padding: 60px 80px;
   background: var(--bg-white);
@@ -533,7 +533,7 @@ nav.site-nav {
   font-size: 1rem;
 }
 
-/* Frame Visual Gambar Tentang Kami */
+/* Frame Visual Gambar Latar Belakang */
 .media-frame-about {
   width: 100%;
   aspect-ratio: 16 / 11;
